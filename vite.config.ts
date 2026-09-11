@@ -13,10 +13,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',   // ← Local backend
+        target: 'https://whatsapp-services-8t87.onrender.com',
         changeOrigin: true,
         secure: false,
-        // rewrite mat karo agar backend pe /api prefix hai
       },
     },
   },
