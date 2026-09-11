@@ -13,10 +13,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://whatsapp-services-8t87.onrender.com', 
+        // Dev me bhi Render backend use hota hai (ngrok zaroori nahi).
+        // Local backend chahiye to yahan http://localhost:8080 kar do.
+        target: 'https://whatsapp-services-8t87.onrender.com',
         changeOrigin: true,
         secure: false,
-        // rewrite mat karo agar backend pe /api prefix hai
       },
     },
   },
