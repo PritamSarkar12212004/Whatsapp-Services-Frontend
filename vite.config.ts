@@ -13,9 +13,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://whatsapp-services-8t87.onrender.com',
+        target: 'https://whatsapp-services-8t87.onrender.com', 
         changeOrigin: true,
         secure: false,
+        // rewrite mat karo agar backend pe /api prefix hai
       },
     },
   },
