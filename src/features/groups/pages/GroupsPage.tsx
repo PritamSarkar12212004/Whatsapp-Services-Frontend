@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { GroupsPageSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import { useWhatsappGroups } from "@/features/groups/hooks/useWhatsappGroups";
@@ -14,6 +14,7 @@ import {
     StarFilled,
     ArrowRightOutlined,
     NotificationOutlined,
+    ThunderboltOutlined,
 } from "@ant-design/icons";
 
 /**
@@ -41,6 +42,14 @@ const chip =
 
 /** One square group / community tile. */
 const GroupCard: React.FC<{ group: WhatsappGroup }> = ({ group }) => {
+    const navigate = useNavigate();
+    const groupPath = `/groups/${encodeURIComponent(group.id)}`;
+
+    // WhatsApp photos can also expire or be blocked, so a broken one falls back
+    // to the initials tile instead of an empty square.
+    const [brokenPhoto, setBrokenPhoto] = useState(false);
+    const photo = brokenPhoto ? null : group.profilePicUrl;
+
     const initials = useMemo(() => {
         const parts = String(group.subject).trim().split(/\s+/);
         const first = parts[0]?.[0] || "G";
@@ -60,21 +69,40 @@ const GroupCard: React.FC<{ group: WhatsappGroup }> = ({ group }) => {
     }
 
     return (
-        <Link
-            to={`/groups/${encodeURIComponent(group.id)}`}
-            className="group relative flex aspect-square flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg sm:p-4"
+        // A div (not a Link) so the card can hold its own links/buttons — the
+        // "Bots" action must not open the group detail page.
+        <div
+            role="link"
+            tabIndex={0}
+            onClick={() => navigate(groupPath)}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(groupPath);
+                }
+            }}
+            className="group relative flex cursor-pointer aspect-square flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-lg sm:p-4"
         >
             {/* Soft accent glow that fades in on hover */}
             <span className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-emerald-500/10 opacity-0 blur-2xl transition duration-300 group-hover:opacity-100" />
 
             <div className="flex items-start justify-between gap-2">
-                <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xs font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-sm ${avatarGradient(
-                        group.subject,
-                    )}`}
-                >
-                    {initials}
-                </div>
+                {photo ? (
+                    <img
+                        src={photo}
+                        alt=""
+                        onError={() => setBrokenPhoto(true)}
+                        className="h-10 w-10 shrink-0 rounded-2xl object-cover shadow-sm sm:h-11 sm:w-11"
+                    />
+                ) : (
+                    <div
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-xs font-bold text-white shadow-sm sm:h-11 sm:w-11 sm:text-sm ${avatarGradient(
+                            group.subject,
+                        )}`}
+                    >
+                        {initials}
+                    </div>
+                )}
 
                 <div className="flex flex-col items-end gap-1">
                     {group.isOwnedByMe ? (
@@ -128,13 +156,28 @@ const GroupCard: React.FC<{ group: WhatsappGroup }> = ({ group }) => {
                 )}
             </div>
 
-            <div className="mt-2 flex items-center justify-between border-t border-gray-100 pt-2.5">
+            <div className="mt-2 flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
                 <span className="truncate text-[11px] font-medium text-gray-400">
                     {group.size.toLocaleString()} members
                 </span>
-                <ArrowRightOutlined className="text-[11px] text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+
+                <div className="flex items-center gap-1.5">
+                    {/* Automation is only offered where we actually have the
+                        power to send — read-only groups get no bot entry. */}
+                    {group.canMessage && (
+                        <Link
+                            to={`${groupPath}/automation`}
+                            onClick={(e) => e.stopPropagation()}
+                            title="Automation — run bots in this group"
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-emerald-800"
+                        >
+                            <ThunderboltOutlined /> Bots
+                        </Link>
+                    )}
+                    <ArrowRightOutlined className="text-[11px] text-gray-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-600" />
+                </div>
             </div>
-        </Link>
+        </div>
     );
 };
 

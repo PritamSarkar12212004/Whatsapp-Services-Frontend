@@ -1,5 +1,9 @@
 import React, { useEffect } from "react";
-import { CloseOutlined, LoadingOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  DownOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
 import type { ContactTagRef, CampaignStatus, TemplateStatus } from "../types/crm.types";
 
 // ---------------------------------------------------------------- Avatar
@@ -278,6 +282,30 @@ export const inputCls =
 
 export const selectCls =
   "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100";
+
+/**
+ * Dropdown with a custom chevron chip, hover border and focus ring — the
+ * native select arrow looks inconsistent across browsers and cannot be
+ * themed. Accepts the same props as a select, plus `wrapClassName`.
+ */
+export const Select: React.FC<
+  React.SelectHTMLAttributes<HTMLSelectElement> & { wrapClassName?: string }
+> = ({ className = "", wrapClassName = "", children, ...rest }) => (
+  <div className={`relative ${wrapClassName}`}>
+    <select
+      {...rest}
+      className={`peer w-full cursor-pointer appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-3.5 pr-11 text-sm font-medium text-gray-900 outline-none transition hover:border-emerald-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+    >
+      {children}
+    </select>
+    {/* The native arrow is hidden and replaced by this chip. Hover/focus state
+        lives on the select's own border + ring, so the chip only needs the two
+        classes the dark remap already covers. */}
+    <span className="pointer-events-none absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg bg-gray-100 text-gray-500 transition peer-disabled:opacity-50">
+      <DownOutlined className="text-[10px]" />
+    </span>
+  </div>
+);
 
 export const PrimaryButton: React.FC<
   React.ButtonHTMLAttributes<HTMLButtonElement>

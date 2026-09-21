@@ -21,7 +21,13 @@ const apiConst = {
     groups: "/whatsapp/groups",
     groupDetail: "/whatsapp/groups/",
     groupManager: "/whatsapp/groups/",
+    groupWarnings: "/whatsapp/groups/",
     syncContacts: "/messaging/contacts/sync-whatsapp",
+  },
+  Bots: {
+    list: "/whatsapp/bots",
+    base: "/whatsapp/bots/",
+    groupBots: "/whatsapp/bots/groups/",
   },
   Contact: {
     allcontact: "/messaging/contacts",

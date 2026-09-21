@@ -10,6 +10,7 @@ import MessageLogPage from "@/features/crm/pages/MessageLogPage";
 import GroupsPage from "@/features/groups/pages/GroupsPage";
 import GroupDetailPage from "@/features/groups/pages/GroupDetailPage";
 import GroupAutomationPage from "@/features/groups/pages/GroupAutomationPage";
+import BotsPage from "@/features/bots/pages/BotsPage";
 import ComingSoonPage from "@/features/placeholder/pages/ComingSoonPage";
 import ProtectedRoute from "./ProtectedRoute";
 import WhatsappGate from "./WhatsappGate";
@@ -35,7 +36,9 @@ const MainRoute = () => {
                     <Route path="/contacts/groups" element={<ContactGroupsPage />} />
                     <Route path="/contacts/tags" element={<TagsPage />} />
                     <Route path="/templates" element={<TemplatesPage />} />
-                    <Route path="/automation" element={<ComingSoonPage title="Automation" description="Automate follow-ups, replies and workflows." />} />
+                    {/* Bots — the automation entry point (also where /automation points) */}
+                    <Route path="/bots" element={<BotsPage />} />
+                    <Route path="/automation" element={<BotsPage />} />
                     <Route path="/analytics" element={<ComingSoonPage title="Analytics" description="Track campaign performance and engagement." />} />
                     <Route path="/developers" element={<ComingSoonPage title="API & Developers" description="Integrate with the WhatsApp CRM API." />} />
                     <Route path="/whatsapp" element={<ComingSoonPage title="WhatsApp" description="Manage your WhatsApp connection and devices." />} />

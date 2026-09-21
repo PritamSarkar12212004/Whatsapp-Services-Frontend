@@ -306,75 +306,92 @@ export const GroupsPageSkeleton: React.FC = () => (
 
 export const GroupDetailSkeleton: React.FC = () => (
     <>
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 lg:px-6">
-            <div className="flex items-center gap-3">
-                <Skeleton rounded="rounded-lg" className="h-9 w-9" />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-white px-4 py-3 lg:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+                <Skeleton rounded="rounded-xl" className="h-10 w-10" />
                 <div className="space-y-2">
-                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-5 w-40" />
                     <Skeleton className="h-3.5 w-56 max-w-full" />
                 </div>
             </div>
             <div className="flex items-center gap-2">
-                <Skeleton rounded="rounded-lg" className="h-9 w-9" />
-                <Skeleton rounded="rounded-lg" className="h-9 w-32" />
+                <Skeleton rounded="rounded-xl" className="h-10 w-10" />
+                <Skeleton rounded="rounded-xl" className="h-10 w-32" />
             </div>
         </div>
 
         <div className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
-            <div className="space-y-6">
-                <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <div className="h-1.5 bg-gray-100" />
-                    <div className="p-6">
-                        <div className="flex flex-wrap items-center gap-4">
-                            <Skeleton rounded="rounded-2xl" className="h-20 w-20" />
-                            <div className="min-w-0 flex-1 space-y-2.5">
-                                <Skeleton className="h-7 w-56 max-w-full" />
-                                <Skeleton className="h-4 w-72 max-w-full" />
+            <div className="space-y-5">
+                <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+                    <Skeleton rounded="rounded-none" className="h-24 w-full" />
+                    <div className="px-5 pb-5">
+                        <div className="flex flex-wrap items-end justify-between gap-4">
+                            <div className="flex min-w-0 items-end gap-4">
+                                <div className="z-10 -mt-12">
+                                    <Skeleton rounded="rounded-2xl" className="h-20 w-20" />
+                                </div>
+                                <div className="min-w-0 flex-1 space-y-2.5 pb-0.5">
+                                    <Skeleton className="h-6 w-56 max-w-full" />
+                                    <Skeleton className="h-4 w-72 max-w-full" />
+                                </div>
                             </div>
+                            <Skeleton rounded="rounded-xl" className="h-10 w-40" />
                         </div>
 
-                        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <Skeleton rounded="rounded-2xl" className="mt-5 h-[70px] w-full" />
+
+                        <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
                             {repeat(4).map((_, i) => (
                                 <div
                                     key={i}
-                                    className="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5"
+                                    className="rounded-2xl border border-gray-100 bg-gray-50/70 p-3.5"
                                 >
-                                    <Skeleton className="h-3 w-20" />
-                                    <Skeleton className="mt-2 h-6 w-14" />
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton rounded="rounded-xl" className="h-8 w-8" />
+                                        <Skeleton className="h-3 w-20" />
+                                    </div>
+                                    <Skeleton className="mt-2 h-5 w-14" />
                                 </div>
                             ))}
                         </div>
 
-                        <Skeleton rounded="rounded-xl" className="mt-4 h-12 w-full" />
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {repeat(4).map((_, i) => (
-                                <Skeleton
-                                    key={i}
-                                    rounded="rounded-full"
-                                    className="h-7 w-32"
-                                />
-                            ))}
+                        <div className="mt-5">
+                            <Skeleton className="h-3 w-32" />
+                            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {repeat(4).map((_, i) => (
+                                    <Skeleton
+                                        key={i}
+                                        rounded="rounded-xl"
+                                        className="h-14 w-full"
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                            <Skeleton className="h-4 w-4" />
-                            <Skeleton className="h-4 w-24" />
+                <div className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            <Skeleton rounded="rounded-xl" className="h-9 w-9" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-3 w-40 max-w-full" />
+                            </div>
                         </div>
-                        <Skeleton rounded="rounded-lg" className="h-8 w-32" />
+                        <Skeleton rounded="rounded-xl" className="h-9 w-28" />
                     </div>
-                    <div className="mt-4 space-y-3">
-                        <Skeleton rounded="rounded-lg" className="h-10 w-full" />
-                        {repeat(5).map((_, i) => (
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        <Skeleton rounded="rounded-xl" className="h-10 w-64" />
+                        <Skeleton rounded="rounded-xl" className="h-10 w-full sm:w-72" />
+                    </div>
+                    <div className="mt-3 grid grid-cols-1 gap-2 lg:grid-cols-2">
+                        {repeat(6).map((_, i) => (
                             <div
                                 key={i}
-                                className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-3"
+                                className="flex items-center gap-3 rounded-xl border border-gray-100 px-4 py-3"
                             >
-                                <SkeletonCircle className="h-9 w-9" />
+                                <SkeletonCircle className="h-10 w-10" />
                                 <div className="flex-1 space-y-2">
                                     <Skeleton className="h-3.5 w-40 max-w-full" />
                                     <Skeleton className="h-2.5 w-24" />

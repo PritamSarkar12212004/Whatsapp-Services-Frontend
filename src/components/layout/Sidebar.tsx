@@ -12,6 +12,7 @@ import {
     MenuOutlined,
     CloseOutlined,
     SyncOutlined,
+    ApiOutlined,
 } from "@ant-design/icons";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -66,6 +67,7 @@ const navGroups: NavGroup[] = [
             },
             { label: "Campaigns", path: "/campaigns", icon: <SendOutlined /> },
             { label: "Groups & Communities", path: "/groups", icon: <TeamOutlined /> },
+            { label: "Bots", path: "/bots", icon: <ApiOutlined /> },
         ],
     },
     {

@@ -10,6 +10,8 @@ export interface WhatsappGroup {
     isCommunityAnnounce: boolean;
     linkedParent: string | null;
     creation: number | null;
+    /** WhatsApp group photo — null when the group has none (or it is private). */
+    profilePicUrl: string | null;
     restrict: boolean;
     announce: boolean;
     isOwnedByMe: boolean;
