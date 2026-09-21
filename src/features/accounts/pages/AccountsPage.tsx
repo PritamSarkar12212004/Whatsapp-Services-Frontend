@@ -135,16 +135,18 @@ const AccountsPage: React.FC = () => {
         return () => clearInterval(id);
     }, [active?.status, fetchQR]);
 
+    // A number that is not linked has nothing to show until a socket exists, so
+    // the connection is started here the same way the QR gate does it.
+    const activeAccountKey = active?.accountId ?? null;
+    const activeStatus = active?.status;
+
     useEffect(() => {
-        if (
-            active &&
-            (active.status === "disconnected" || active.status === "logged_out")
-        ) {
+        if (activeStatus === "disconnected" || activeStatus === "logged_out") {
             connectWhatsApp(undefined, {
                 onError: () => toast.error("Could not start the connection"),
             });
         }
-    }, [active?.accountId, active?.status, connectWhatsApp]);
+    }, [activeAccountKey, activeStatus, connectWhatsApp]);
 
     return (
         <Shell>

@@ -419,12 +419,23 @@ const WhatsappGate = () => {
                 )}
             </div>
 
-            <button
-                onClick={handleWebsiteLogout}
-                className="mt-6 text-sm font-medium text-gray-400 transition hover:text-red-500"
-            >
-                Logout of the app
-            </button>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+                {/* Several numbers can be linked to one login — this screen must
+                    never trap the user on a number that will not connect. */}
+                <button
+                    onClick={() => navigate("/accounts")}
+                    className="text-sm font-medium text-emerald-600 transition hover:text-emerald-700"
+                >
+                    Manage WhatsApp numbers
+                </button>
+
+                <button
+                    onClick={handleWebsiteLogout}
+                    className="text-sm font-medium text-gray-400 transition hover:text-red-500"
+                >
+                    Logout of the app
+                </button>
+            </div>
         </div>
     );
 };
