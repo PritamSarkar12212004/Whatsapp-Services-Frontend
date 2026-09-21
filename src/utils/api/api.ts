@@ -34,4 +34,53 @@ api.interceptors.request.use(
   }
 );
 
+/**
+ * A request can fail because of the selected number and not because anything is
+ * broken:
+ *   - the number was removed (or belongs to someone else) → 404 from the API,
+ *   - the deployed backend does not allow the `x-wa-account` header yet, so the
+ *     browser's preflight blocks the request and axios reports no response.
+ *
+ * In both cases the answer is the same: drop the header, keep the app working
+ * on the primary number, and remember that by clearing the selection. Only one
+ * retry per request, and only when a number was actually selected — a plain
+ * network outage still surfaces as an error.
+ */
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error?.config as
+      | (typeof error.config & { _waAccountRetried?: boolean })
+      | undefined;
+
+    const usedAccountHeader = Boolean(config?.headers?.["x-wa-account"]);
+
+    if (!config || !usedAccountHeader || config._waAccountRetried) {
+      return Promise.reject(error);
+    }
+
+    const status = error?.response?.status;
+    const message = String(error?.response?.data?.message ?? "");
+
+    const rejectedNumber =
+      (status === 404 || status === 400) && /whatsapp account/i.test(message);
+    const blockedBeforeSending = !error?.response;
+
+    if (!rejectedNumber && !blockedBeforeSending) {
+      return Promise.reject(error);
+    }
+
+    config._waAccountRetried = true;
+    delete config.headers["x-wa-account"];
+    useStoreWhatsappAccount.getState().setActiveAccount(null);
+
+    console.warn(
+      "[whatsapp] The selected number was not accepted by the server — " +
+        "continued with the primary number instead.",
+    );
+
+    return api.request(config);
+  }
+);
+
 export default api;
