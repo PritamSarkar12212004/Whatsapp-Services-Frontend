@@ -82,7 +82,12 @@ export interface ContactsListResponse {
 export interface ContactSyncResult {
   found: number;
   inserted: number;
+  /** Contacts whose data actually changed (already-current ones are excluded). */
   updated: number;
+  /** Contacts that matched WhatsApp data exactly — nothing was written. */
+  unchanged?: number;
+  /** The run hit its database deadline and is finishing in the background. */
+  timedOut?: boolean;
   skippedGroups: number;
   skippedInvalid: number;
   skippedSelf: number;

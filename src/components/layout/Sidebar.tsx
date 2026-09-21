@@ -175,7 +175,22 @@ const Sidebar: React.FC = () => {
         try {
             const res = await api.post(apiConst.Whatsapp.syncContacts);
             const data = res.data?.data;
-            if (data) {
+
+            if (data?.timedOut) {
+                toast.warning(
+                    res.data?.message ||
+                        "Sync is still finishing in the background",
+                );
+            } else if (
+                data &&
+                (data.unchanged ?? 0) > 0 &&
+                !data.inserted &&
+                !data.updated
+            ) {
+                // Nothing changed since the last sync — say so instead of
+                // reporting a wall of "updated" rows that did not move.
+                toast.success(`Already up to date — ${data.unchanged} contacts checked`);
+            } else if (data) {
                 toast.success(
                     `Contacts synced: ${data.inserted} inserted, ${data.updated} updated`,
                 );

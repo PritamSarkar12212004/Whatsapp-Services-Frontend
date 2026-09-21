@@ -223,9 +223,19 @@ const ContactsPage: React.FC = () => {
     const handleSync = () => {
         sync.mutate(undefined, {
             onSuccess: (res) => {
-                toast.success(
-                    `Sync done — ${res.inserted} inserted, ${res.updated} updated (${res.found} found)`,
-                );
+                const unchanged = res.unchanged ?? 0;
+
+                // "0 inserted, 1762 updated" used to fire on every reconnect
+                // even when nothing had actually changed.
+                const message = res.timedOut
+                    ? `Sync is still finishing in the background — ${res.found} contacts checked`
+                    : unchanged && !res.updated && !res.inserted
+                      ? `Already up to date — ${unchanged} contacts checked`
+                      : `Sync done — ${res.inserted} inserted, ${res.updated} updated, ${unchanged} already current (${res.found} found)`;
+
+                if (res.timedOut) toast.warning(message);
+                else toast.success(message);
+
                 refetch();
             },
             onError: (err: any) => {
