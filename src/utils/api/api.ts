@@ -1,6 +1,7 @@
 import axios from "axios";
 import apiConst from "../../consts/api/apiConst";
 import { useStoreToken } from "@/store/zustand/token/useStoreToken";
+import { useStoreWhatsappAccount } from "@/store/zustand/whatsapp/useStoreWhatsappAccount";
 
 const api = axios.create({
   baseURL: apiConst.BASE_URL,
@@ -16,6 +17,14 @@ api.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Which WhatsApp number this call is about. Missing header = the primary
+    // number, so older clients and background jobs keep working unchanged.
+    const accountId = useStoreWhatsappAccount.getState().activeAccountId;
+
+    if (accountId) {
+      config.headers["x-wa-account"] = accountId;
     }
 
     return config;

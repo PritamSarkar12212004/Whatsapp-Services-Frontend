@@ -23,6 +23,7 @@ import { useWhatsappStatus } from "@/features/dashboard/hooks/useWhatsappStatus"
 import { useWhatsappConnect } from "@/features/dashboard/hooks/useWhatsappConnect";
 import api from "@/utils/api/api";
 import apiConst from "@/consts/api/apiConst";
+import AccountSwitcher from "./AccountSwitcher";
 
 interface NavChild {
     label: string;
@@ -271,6 +272,9 @@ const Sidebar: React.FC = () => {
                         </p>
                     </div>
                 </div>
+
+                {/* ============ WHATSAPP NUMBER SWITCHER ============ */}
+                <AccountSwitcher />
 
                 {/* ==================== WHATSAPP STATUS ==================== */}
                 <div className="shrink-0 border-b border-gray-100 p-3">

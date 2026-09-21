@@ -12,6 +12,7 @@ const apiConst = {
   Whatsapp: {
     status: "/whatsapp/status",
     connect: "/whatsapp/connect",
+    accounts: "/whatsapp/accounts",
     qr: "/whatsapp/qr",
     disconnect: "/whatsapp/disconnect",
     profile: "/whatsapp/profile",

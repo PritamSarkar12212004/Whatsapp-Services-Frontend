@@ -11,6 +11,7 @@ import GroupsPage from "@/features/groups/pages/GroupsPage";
 import GroupDetailPage from "@/features/groups/pages/GroupDetailPage";
 import GroupAutomationPage from "@/features/groups/pages/GroupAutomationPage";
 import BotsPage from "@/features/bots/pages/BotsPage";
+import AccountsPage from "@/features/accounts/pages/AccountsPage";
 import ComingSoonPage from "@/features/placeholder/pages/ComingSoonPage";
 import ProtectedRoute from "./ProtectedRoute";
 import WhatsappGate from "./WhatsappGate";
@@ -22,6 +23,11 @@ const MainRoute = () => {
             <Route path="/auth" element={<AuthPage />} />
 
             <Route element={<ProtectedRoute />}>
+                {/* Outside the gate on purpose: numbers are linked, switched and
+                    removed here, so this page must open even when the selected
+                    number is not connected yet. */}
+                <Route path="/accounts" element={<AccountsPage />} />
+
                 <Route element={<WhatsappGate />}>
                     <Route path="/" element={<DashboardPage />} />
                     <Route path="/settings" element={<SettingsPage />} />
