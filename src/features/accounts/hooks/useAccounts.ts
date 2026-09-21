@@ -29,7 +29,8 @@ export const useAccounts = () =>
 export const useCreateAccount = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (label: string) => createAccount(label),
+        mutationFn: (input: { label: string; phoneNumber: string }) =>
+            createAccount(input),
         onSuccess: () => qc.invalidateQueries({ queryKey: ["whatsapp-accounts"] }),
     });
 };

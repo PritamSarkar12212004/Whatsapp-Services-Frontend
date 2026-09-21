@@ -13,12 +13,18 @@ import {
     useAccounts,
 } from "../hooks/useAccounts";
 import { useSwitchAccount } from "../hooks/useSwitchAccount";
-import type { AccountStatus, WhatsappAccount } from "../api/accounts.api";
+import {
+    isValidPhone,
+    normalizePhone,
+    type AccountStatus,
+    type WhatsappAccount,
+} from "../api/accounts.api";
 import {
     CheckCircleOutlined,
     CloseCircleOutlined,
     DeleteOutlined,
     EditOutlined,
+    ExclamationCircleOutlined,
     LinkOutlined,
     PlusOutlined,
     StarFilled,
@@ -74,6 +80,8 @@ const AccountsPage: React.FC = () => {
 
     const [addOpen, setAddOpen] = useState(params.get("add") === "1");
     const [label, setLabel] = useState("");
+    const [countryCode, setCountryCode] = useState("91");
+    const [phone, setPhone] = useState("");
     const [renameTarget, setRenameTarget] = useState<WhatsappAccount | null>(null);
     const [renameValue, setRenameValue] = useState("");
     const [removeTarget, setRemoveTarget] = useState<WhatsappAccount | null>(null);
@@ -85,8 +93,36 @@ const AccountsPage: React.FC = () => {
         [list, activeAccountId],
     );
 
+    // ---- Add dialog validation (the same rules the API enforces) ----
+    const codeDigits = normalizePhone(countryCode);
+    const numberDigits = normalizePhone(phone);
+    const fullNumber = `${codeDigits}${numberDigits}`;
+
+    const codeError = !codeDigits
+        ? "Country code is required"
+        : codeDigits.length > 4
+          ? "Country code looks too long"
+          : "";
+
+    // Exactly the rule the API enforces (8–15 digits with the country code),
+    // so the dialog never lets through a number the server will reject.
+    const phoneError = !numberDigits
+        ? "Phone number is required"
+        : !isValidPhone(fullNumber)
+          ? "Enter the full number with its country code (8–15 digits)"
+          : "";
+
+    const addError = codeError || phoneError;
+    const numberValid = !addError;
+
+    // "Required" is only an error once the user has actually typed something —
+    // a fresh dialog should not shout at them.
+    const [addTouched, setAddTouched] = useState(false);
+
     const openAdd = () => {
         setLabel("");
+        setPhone("");
+        setAddTouched(false);
         setAddOpen(true);
 
         // Drop `?add=1` so a reload doesn't reopen the dialog.
@@ -96,16 +132,32 @@ const AccountsPage: React.FC = () => {
     };
 
     const submitAdd = () => {
-        createAccount.mutate(label.trim(), {
+        if (!numberValid) {
+            setAddTouched(true);
+            toast.error(addError || "Enter a valid WhatsApp number");
+            return;
+        }
+
+        createAccount.mutate(
+            { label: label.trim(), phoneNumber: fullNumber },
+            {
             onSuccess: async (account) => {
                 setAddOpen(false);
-                toast.success("Number added — scan the QR to link it");
+                setPhone("");
+                setLabel("");
+                toast.success(
+                    `+${fullNumber} added — scan the QR to link it`,
+                );
                 // The new number becomes the one we are working as, so its QR
                 // (fetched with the account header) shows up right here.
                 await switchTo(account.accountId ?? null);
             },
-            onError: () => toast.error("Could not add the number"),
-        });
+            onError: (err: unknown) => {
+                const e = err as { response?: { data?: { message?: string } } };
+                toast.error(e?.response?.data?.message || "Could not add the number");
+            },
+            },
+        );
     };
 
     // ==================== QR for the selected number ====================
@@ -274,6 +326,21 @@ const AccountsPage: React.FC = () => {
                                                 {style.label}
                                             </span>
                                         </p>
+
+                                        {/* The number that got linked is not the one
+                                            that was entered — say so instead of
+                                            showing a number the user never picked. */}
+                                        {account.numberMismatch && (
+                                            <p className="mt-1 flex items-start gap-1 text-[11px] font-medium text-amber-600">
+                                                <ExclamationCircleOutlined className="mt-[2px] shrink-0" />
+                                                <span>
+                                                    You linked +
+                                                    {account.phoneNumber} — you
+                                                    entered +
+                                                    {account.expectedPhoneNumber}
+                                                </span>
+                                            </p>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center gap-1.5">
@@ -370,7 +437,12 @@ const AccountsPage: React.FC = () => {
                         </SecondaryButton>
                         <PrimaryButton
                             onClick={submitAdd}
-                            disabled={createAccount.isPending}
+                            disabled={createAccount.isPending || !numberValid}
+                            title={
+                                numberValid
+                                    ? "Add this number"
+                                    : codeError || phoneError
+                            }
                         >
                             {createAccount.isPending ? <Spinner /> : <PlusOutlined />}
                             {createAccount.isPending ? "Adding…" : "Add number"}
@@ -380,21 +452,84 @@ const AccountsPage: React.FC = () => {
             >
                 <div className="space-y-3">
                     <Field
-                        label="Name this number"
+                        label="WhatsApp number"
+                        required
+                        hint="With the country code — e.g. 91 for India, 1 for the US"
+                    >
+                        <div className="flex gap-2">
+                            <div className="relative w-[92px] shrink-0">
+                                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm font-semibold text-gray-400">
+                                    +
+                                </span>
+                                <input
+                                    value={countryCode}
+                                    onChange={(e) => {
+                                        setAddTouched(true);
+                                        setCountryCode(
+                                            e.target.value
+                                                .replace(/\D/g, "")
+                                                .slice(0, 4),
+                                        );
+                                    }}
+                                    inputMode="numeric"
+                                    placeholder="91"
+                                    aria-label="Country code"
+                                    className={`${inputCls} pl-7`}
+                                />
+                            </div>
+
+                            <input
+                                value={phone}
+                                onChange={(e) => {
+                                    setAddTouched(true);
+                                    setPhone(
+                                        e.target.value.replace(/\D/g, "").slice(0, 14),
+                                    );
+                                }}
+                                inputMode="tel"
+                                placeholder="9876543210"
+                                aria-label="WhatsApp number"
+                                aria-invalid={Boolean(phoneError)}
+                                className={inputCls}
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") submitAdd();
+                                }}
+                            />
+                        </div>
+                    </Field>
+
+                    {addTouched && addError ? (
+                        <p className="text-[11px] font-medium text-red-600">
+                            {addError}
+                        </p>
+                    ) : (
+                        <p className="text-[11px] font-medium text-gray-400">
+                            {numberDigits.length
+                                ? `Will link +${fullNumber}`
+                                : "Enter the number you want to link, with its country code."}
+                        </p>
+                    )}
+
+                    <Field
+                        label="Name (optional)"
                         hint="Shown in the sidebar switcher — e.g. Sales, Support"
                     >
                         <input
                             value={label}
-                            onChange={(e) => setLabel(e.target.value)}
+                            onChange={(e) => setLabel(e.target.value.slice(0, 40))}
                             placeholder="e.g. Sales"
                             className={inputCls}
-                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") submitAdd();
+                            }}
                         />
                     </Field>
 
                     <p className="text-[11px] leading-relaxed text-gray-500">
                         After adding, a QR code appears — scan it from WhatsApp →
-                        Linked Devices to link the number.
+                        Linked Devices. The number you type here is checked against
+                        the number that actually gets linked.
                     </p>
                 </div>
             </Modal>

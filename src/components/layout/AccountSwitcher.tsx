@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
     CheckOutlined,
     DownOutlined,
+    ExclamationCircleOutlined,
     LoadingOutlined,
     PlusOutlined,
     SettingOutlined,
@@ -110,8 +111,14 @@ const AccountSwitcher: React.FC = () => {
                     <span className="block truncate text-xs font-semibold text-gray-900">
                         {title}
                     </span>
-                    <span className="block truncate text-[10px] text-gray-400">
-                        {subtitle}
+                    <span
+                        className={`block truncate text-[10px] ${
+                            active?.numberMismatch ? "text-amber-600" : "text-gray-400"
+                        }`}
+                    >
+                        {active?.numberMismatch
+                            ? `Linked +${active.phoneNumber} — not the number you entered`
+                            : subtitle}
                     </span>
                 </span>
 
@@ -163,10 +170,22 @@ const AccountSwitcher: React.FC = () => {
                                         <span className="block truncate text-xs font-medium text-gray-800">
                                             {label}
                                         </span>
-                                        <span className="block truncate text-[10px] text-gray-400">
+                                        <span
+                                            className={`block truncate text-[10px] ${
+                                                account.numberMismatch
+                                                    ? "text-amber-600"
+                                                    : "text-gray-400"
+                                            }`}
+                                        >
+                                            {account.numberMismatch && (
+                                                <ExclamationCircleOutlined className="mr-1" />
+                                            )}
                                             {account.phoneNumber
                                                 ? `+${account.phoneNumber}`
                                                 : statusLabel[account.status]}
+                                            {account.numberMismatch
+                                                ? " — not the number you entered"
+                                                : ""}
                                         </span>
                                     </span>
 

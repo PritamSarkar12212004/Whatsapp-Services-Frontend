@@ -62,9 +62,17 @@ api.interceptors.response.use(
     const status = error?.response?.status;
     const message = String(error?.response?.data?.message ?? "");
 
+    const method = String(config.method ?? "get").toUpperCase();
+
+    // "Unknown account" means the API refused the request before it ran, so
+    // retrying is safe for any method.
     const rejectedNumber =
       (status === 404 || status === 400) && /whatsapp account/i.test(message);
-    const blockedBeforeSending = !error?.response;
+
+    // No response at all is different: the server may well have processed it
+    // (the reply just never made it back), so only read-only calls are retried —
+    // never a create or a send.
+    const blockedBeforeSending = !error?.response && method === "GET";
 
     if (!rejectedNumber && !blockedBeforeSending) {
       return Promise.reject(error);
