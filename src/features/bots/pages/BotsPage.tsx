@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
+import { BotsPageSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import { toast } from "sonner";
 import {
     Field,
@@ -348,6 +349,15 @@ const BotsPage: React.FC = () => {
         );
     };
 
+    // First paint only — a cached list renders instantly instead.
+    if (isLoading) {
+        return (
+            <MainLayout>
+                <BotsPageSkeleton />
+            </MainLayout>
+        );
+    }
+
     const stats = [
         {
             label: "Total bots",
@@ -433,13 +443,7 @@ const BotsPage: React.FC = () => {
                             </div>
                         </div>
 
-                        {isLoading && (
-                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                <Spinner /> Loading bots…
-                            </div>
-                        )}
-
-                        {!isLoading && !filtered.length && (
+                        {!filtered.length && (
                             <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
                                 <ApiOutlined className="text-3xl text-gray-300" />
                                 <p className="mt-3 text-sm font-medium text-gray-700">
