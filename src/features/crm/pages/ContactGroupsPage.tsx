@@ -23,7 +23,6 @@ import {
 } from "../hooks/useCrm";
 import {
     Avatar,
-    CenteredSpinner,
     DangerButton,
     EmptyState,
     Field,
@@ -35,6 +34,10 @@ import {
     fmtPhone,
     inputCls,
 } from "../components/CrmUi";
+import {
+    CardGridSkeleton,
+    MemberListSkeleton,
+} from "@/components/ui/skeleton/PageSkeletons";
 import type { ContactGroup } from "../types/crm.types";
 
 const ContactGroupsPage: React.FC = () => {
@@ -83,7 +86,7 @@ const ContactGroupsPage: React.FC = () => {
             </div>
 
             {isLoading ? (
-                <CenteredSpinner label="Loading groups…" />
+                <CardGridSkeleton />
             ) : !groups?.length ? (
                 <EmptyState
                     icon={<TeamOutlined />}
@@ -413,7 +416,7 @@ const MembersDrawer: React.FC<{
                         Add to group
                     </p>
                     {loadingContacts ? (
-                        <CenteredSpinner label="Searching…" />
+                        <MemberListSkeleton />
                     ) : candidates.length === 0 ? (
                         <p className="px-2 py-4 text-xs text-gray-400">
                             No matching contacts outside this group.

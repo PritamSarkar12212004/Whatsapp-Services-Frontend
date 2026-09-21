@@ -44,7 +44,6 @@ import {
     Avatar,
     BlueBadge,
     CampaignStatusBadge,
-    CenteredSpinner,
     DangerButton,
     EmptyState,
     Field,
@@ -61,6 +60,15 @@ import {
     recipientStatusBadge,
     selectCls,
 } from "../components/CrmUi";
+import {
+    CampaignsTableSkeleton,
+    ChipRowSkeleton,
+    DevCampaignBlockSkeleton,
+    DrawerSkeleton,
+    FormRowSkeleton,
+    RecipientListSkeleton,
+    StatTilesSkeleton,
+} from "@/components/ui/skeleton/PageSkeletons";
 import type {
     Campaign,
     CampaignAudience,
@@ -81,10 +89,16 @@ const STATUS_TABS: { value: CampaignStatus | "all"; label: string }[] = [
 const audienceSummary = (c: Campaign) => {
     const a = c.audience || {};
     const parts: string[] = [];
-    if (a.groups?.length) parts.push(`${a.groups.length} group${a.groups.length > 1 ? "s" : ""}`);
-    if (a.tags?.length) parts.push(`${a.tags.length} tag${a.tags.length > 1 ? "s" : ""}`);
-    if (a.contacts?.length) parts.push(`${a.contacts.length} contact${a.contacts.length > 1 ? "s" : ""}`);
-    if (a.excludedContacts?.length) parts.push(`${a.excludedContacts.length} excluded`);
+    if (a.groups?.length)
+        parts.push(`${a.groups.length} group${a.groups.length > 1 ? "s" : ""}`);
+    if (a.tags?.length)
+        parts.push(`${a.tags.length} tag${a.tags.length > 1 ? "s" : ""}`);
+    if (a.contacts?.length)
+        parts.push(
+            `${a.contacts.length} contact${a.contacts.length > 1 ? "s" : ""}`,
+        );
+    if (a.excludedContacts?.length)
+        parts.push(`${a.excludedContacts.length} excluded`);
     return parts.length ? parts.join(" · ") : "No audience";
 };
 
@@ -96,9 +110,11 @@ const isDevCampaign = (c: Campaign) =>
 const CampaignsPage: React.FC = () => {
     const [mode, setMode] = useState<"normal" | "dev">("normal");
     const [tab, setTab] = useState<CampaignStatus | "all">("all");
-    const { data: campaigns, isLoading, refetch } = useCampaigns(
-        tab === "all" ? undefined : tab,
-    );
+    const {
+        data: campaigns,
+        isLoading,
+        refetch,
+    } = useCampaigns(tab === "all" ? undefined : tab);
 
     // Normal tab = non-dev-template campaigns (unchanged behaviour);
     // Dev tab = dev-template campaigns with run/pause/cancel controls.
@@ -140,9 +156,12 @@ const CampaignsPage: React.FC = () => {
         <MainLayout>
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Campaigns</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                        Campaigns
+                    </h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Send bulk WhatsApp messages using templates and audiences
+                        Send bulk WhatsApp messages using templates and
+                        audiences
                     </p>
                 </div>
                 <PrimaryButton onClick={() => setCreateOpen(true)}>
@@ -152,10 +171,12 @@ const CampaignsPage: React.FC = () => {
 
             {/* Mode tabs — Normal (unchanged) vs Dev (API-gated dev templates) */}
             <div className="mb-3 flex w-fit flex-wrap gap-1 rounded-2xl bg-gray-100 p-1">
-                {([
-                    ["normal", "Normal"],
-                    ["dev", "Dev"],
-                ] as const).map(([val, label]) => (
+                {(
+                    [
+                        ["normal", "Normal"],
+                        ["dev", "Dev"],
+                    ] as const
+                ).map(([val, label]) => (
                     <button
                         key={val}
                         onClick={() => setMode(val)}
@@ -176,9 +197,10 @@ const CampaignsPage: React.FC = () => {
             </div>
             {mode === "dev" && (
                 <p className="mb-3 text-[11px] text-gray-400">
-                    Dev campaigns gate their template's API access — a template's API
-                    sends work only while one of its campaigns is running. Paused =
-                    API blocked, cancelled/removed = API blocked.
+                    Dev campaigns gate their template's API access — a
+                    template's API sends work only while one of its campaigns is
+                    running. Paused = API blocked, cancelled/removed = API
+                    blocked.
                 </p>
             )}
 
@@ -200,11 +222,15 @@ const CampaignsPage: React.FC = () => {
             </div>
 
             {isLoading ? (
-                <CenteredSpinner label="Loading campaigns…" />
+                <CampaignsTableSkeleton />
             ) : !visible.length ? (
                 <EmptyState
                     icon={<SendOutlined />}
-                    title={mode === "dev" ? "No dev campaigns yet" : "No campaigns yet"}
+                    title={
+                        mode === "dev"
+                            ? "No dev campaigns yet"
+                            : "No campaigns yet"
+                    }
                     description={
                         mode === "dev"
                             ? "Create a campaign with a dev template to enable its API sends (Postman / other apps)."
@@ -227,7 +253,9 @@ const CampaignsPage: React.FC = () => {
                                     <th className="px-4 py-3">Audience</th>
                                     <th className="px-4 py-3">Sent</th>
                                     <th className="px-4 py-3">Scheduled</th>
-                                    <th className="px-4 py-3 text-right">Actions</th>
+                                    <th className="px-4 py-3 text-right">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -238,7 +266,9 @@ const CampaignsPage: React.FC = () => {
                                     >
                                         <td className="px-4 py-3">
                                             <button
-                                                onClick={() => setDetailId(c._id)}
+                                                onClick={() =>
+                                                    setDetailId(c._id)
+                                                }
                                                 className="text-left"
                                             >
                                                 <p className="text-sm font-medium text-gray-900 hover:text-emerald-600">
@@ -250,18 +280,55 @@ const CampaignsPage: React.FC = () => {
                                             </button>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <CampaignStatusBadge status={c.status} />
+                                            <CampaignStatusBadge
+                                                status={c.status}
+                                            />
                                         </td>
                                         <td className="px-4 py-3 text-xs text-gray-600">
                                             {audienceSummary(c)}
                                         </td>
-                                        <td className="px-4 py-3">
-                                            <span className="text-sm font-semibold text-gray-800">
-                                                {c.statistics?.sent ?? 0}
-                                            </span>
-                                            <span className="text-xs text-gray-400">
-                                                {" "}/ {c.statistics?.total ?? 0}
-                                            </span>
+                                        <td
+                                            className="px-4 py-3"
+                                            title={
+                                                isDevCampaign(c)
+                                                    ? "API sends / total API calls (dev campaign — no audience)"
+                                                    : "Sent / total recipients"
+                                            }
+                                        >
+                                            {/* Dev campaigns never create recipients, so
+                                                their numbers come from the API-call
+                                                counters instead of statistics.*. */}
+                                            {isDevCampaign(c) ? (
+                                                <>
+                                                    <span className="text-sm font-semibold text-gray-800">
+                                                        {c.devStats?.sent ??
+                                                            c.devStats
+                                                                ?.apiCalls ??
+                                                            0}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">
+                                                        {" "}
+                                                        /{" "}
+                                                        {c.devStats?.total ??
+                                                            c.devStats
+                                                                ?.apiCalls ??
+                                                            0}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <span className="text-sm font-semibold text-gray-800">
+                                                        {c.statistics?.sent ??
+                                                            0}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">
+                                                        {" "}
+                                                        /{" "}
+                                                        {c.statistics?.total ??
+                                                            0}
+                                                    </span>
+                                                </>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-xs text-gray-400">
                                             {c.scheduledAt
@@ -271,7 +338,9 @@ const CampaignsPage: React.FC = () => {
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
-                                                    onClick={() => setDetailId(c._id)}
+                                                    onClick={() =>
+                                                        setDetailId(c._id)
+                                                    }
                                                     title="View"
                                                     className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-emerald-50 hover:text-emerald-600"
                                                 >
@@ -292,9 +361,13 @@ const CampaignsPage: React.FC = () => {
                                                         <CaretRightOutlined />
                                                     </button>
                                                 )}
-                                                {(c.status === "draft" || c.status === "scheduled") && (
+                                                {(c.status === "draft" ||
+                                                    c.status ===
+                                                        "scheduled") && (
                                                     <button
-                                                        onClick={() => setEditTarget(c)}
+                                                        onClick={() =>
+                                                            setEditTarget(c)
+                                                        }
                                                         title="Edit"
                                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
                                                     >
@@ -357,9 +430,12 @@ const CampaignsPage: React.FC = () => {
                                                         </button>
                                                     )}
                                                 {(c.status === "draft" ||
-                                                    c.status === "cancelled") && (
+                                                    c.status ===
+                                                        "cancelled") && (
                                                     <button
-                                                        onClick={() => setDeleteTarget(c)}
+                                                        onClick={() =>
+                                                            setDeleteTarget(c)
+                                                        }
                                                         title="Delete"
                                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red-50 hover:text-red-600"
                                                     >
@@ -409,25 +485,36 @@ const CampaignsPage: React.FC = () => {
                                     },
                                     onError: (err: any) =>
                                         toast.error(
-                                            err?.response?.data?.message || "Delete failed",
+                                            err?.response?.data?.message ||
+                                                "Delete failed",
                                         ),
                                 })
                             }
                             disabled={deleteCampaign.isPending}
                         >
-                            {deleteCampaign.isPending ? <Spinner /> : <DeleteOutlined />} Delete
+                            {deleteCampaign.isPending ? (
+                                <Spinner />
+                            ) : (
+                                <DeleteOutlined />
+                            )}{" "}
+                            Delete
                         </DangerButton>
                     </>
                 }
             >
                 <p className="text-sm text-gray-600">
-                    Delete campaign <strong>{deleteTarget?.name}</strong>? Only drafts and
-                    cancelled campaigns can be deleted.
+                    Delete campaign <strong>{deleteTarget?.name}</strong>? Only
+                    drafts and cancelled campaigns can be deleted.
                 </p>
             </Modal>
 
             {/* Detail drawer */}
-            {detailId && <CampaignDrawer id={detailId} onClose={() => setDetailId(null)} />}
+            {detailId && (
+                <CampaignDrawer
+                    id={detailId}
+                    onClose={() => setDetailId(null)}
+                />
+            )}
         </MainLayout>
     );
 };
@@ -435,7 +522,7 @@ const CampaignsPage: React.FC = () => {
 // ------------------------------------------------------------ Form modal
 
 const templateIdOf = (t: Campaign["template"] | undefined) =>
-    typeof t === "object" && t ? t._id : ((t as string) || "");
+    typeof t === "object" && t ? t._id : (t as string) || "";
 
 const categoryDot = (cat: string) => {
     const palette = [
@@ -582,8 +669,11 @@ const TemplatePicker: React.FC<{
                                             </span>
                                             <span className="block truncate text-[11px] text-gray-400">
                                                 {t.category} ·{" "}
-                                                {t.variables?.length || 0} variable
-                                                {t.variables?.length === 1 ? "" : "s"}
+                                                {t.variables?.length || 0}{" "}
+                                                variable
+                                                {t.variables?.length === 1
+                                                    ? ""
+                                                    : "s"}
                                                 {t.devMode
                                                     ? ` · ${t.inCampaignCount || 0} campaign${(t.inCampaignCount || 0) === 1 ? "" : "s"} linked`
                                                     : ""}
@@ -671,6 +761,15 @@ const CampaignFormModal: React.FC<{
         }));
     };
 
+    // A dev template turns the campaign into a pure API switch: it never sends
+    // to an audience, so audience / repeats / schedule are not asked for (see
+    // campaignService.startCampaign — it jumps straight to "running").
+    const selectedTemplate = (templates || []).find(
+        (t) => t._id === form.template,
+    );
+    const isDevTemplate =
+        mode === "dev" || !!editing?.devTemplate || !!selectedTemplate?.devMode;
+
     const submit = () => {
         if (!form.name.trim()) {
             toast.error("Campaign name is required");
@@ -680,8 +779,10 @@ const CampaignFormModal: React.FC<{
             toast.error("Select a template");
             return;
         }
-        if (!form.groups.length && !form.contacts.length) {
-            toast.error("Select at least one group or contact for the audience");
+        if (!isDevTemplate && !form.groups.length && !form.contacts.length) {
+            toast.error(
+                "Select at least one group or contact for the audience",
+            );
             return;
         }
         if (form.scheduledAt && !dayjs(form.scheduledAt).isValid()) {
@@ -698,16 +799,20 @@ const CampaignFormModal: React.FC<{
         const payload = {
             name: form.name.trim(),
             template: form.template,
-            audience: {
-                groups: form.groups,
-                tags: [],
-                contacts: form.contacts,
-                excludedContacts: [],
-            },
-            scheduledAt: form.scheduledAt || null,
-            sendLimit: form.sendLimit
-                ? Math.max(1, parseInt(form.sendLimit, 10))
-                : null,
+            audience: isDevTemplate
+                ? { groups: [], tags: [], contacts: [], excludedContacts: [] }
+                : {
+                      groups: form.groups,
+                      tags: [],
+                      contacts: form.contacts,
+                      excludedContacts: [],
+                  },
+            scheduledAt: isDevTemplate ? null : form.scheduledAt || null,
+            sendLimit: isDevTemplate
+                ? null
+                : form.sendLimit
+                  ? Math.max(1, parseInt(form.sendLimit, 10))
+                  : null,
         };
         if (editing) {
             updateCampaign.mutate(
@@ -718,7 +823,9 @@ const CampaignFormModal: React.FC<{
                         onClose();
                     },
                     onError: (err: any) =>
-                        toast.error(err?.response?.data?.message || "Update failed"),
+                        toast.error(
+                            err?.response?.data?.message || "Update failed",
+                        ),
                 },
             );
         } else {
@@ -728,7 +835,9 @@ const CampaignFormModal: React.FC<{
                     onClose();
                 },
                 onError: (err: any) =>
-                    toast.error(err?.response?.data?.message || "Create failed"),
+                    toast.error(
+                        err?.response?.data?.message || "Create failed",
+                    ),
             });
         }
     };
@@ -781,7 +890,9 @@ const CampaignFormModal: React.FC<{
                 <Field label="Campaign name" required>
                     <input
                         value={form.name}
-                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        onChange={(e) =>
+                            setForm({ ...form, name: e.target.value })
+                        }
                         placeholder="e.g. Festive Offer Blast"
                         className={inputCls}
                     />
@@ -794,157 +905,213 @@ const CampaignFormModal: React.FC<{
                         onChange={(id) => setForm({ ...form, template: id })}
                     />
                     <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400">
-                        Dev templates are only usable via API after being linked to a
-                        campaign — creating this campaign activates it.
+                        Dev templates are only usable via API after being linked
+                        to a campaign — creating this campaign activates it.
                     </p>
                 </Field>
 
-                <Field label="Groups">
-                    <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-gray-200 p-2">
-                        {(groups || []).map((g) => (
-                            <button
-                                key={g._id}
-                                type="button"
-                                onClick={() => toggle("groups", g._id)}
-                                className={chipBtn(form.groups.includes(g._id))}
-                            >
-                                {g.name}
-                            </button>
-                        ))}
-                        {!groups?.length && (
-                            <p className="text-xs text-gray-400">No groups yet.</p>
-                        )}
-                    </div>
-                </Field>
-
-                <Field
-                    label="Specific contacts"
-                    hint="Group members ke alawa extra contacts yahan se add karein — dono bheje jayenge"
-                >
-                    <div className="rounded-xl border border-gray-200">
-                        <div className="relative border-b border-gray-100 p-2">
-                            <SearchOutlined className="absolute left-5 top-1/2 -translate-y-1/2 text-sm text-gray-400" />
-                            <input
-                                value={contactSearch}
-                                onChange={(e) => setContactSearch(e.target.value)}
-                                placeholder="Search contacts to include…"
-                                className="w-full rounded-lg pl-8 pr-2 py-1.5 text-sm outline-none placeholder:text-gray-400"
-                            />
-                        </div>
-                        <div className="flex max-h-36 flex-wrap gap-1.5 overflow-y-auto p-2">
-                            {(allContacts || []).slice(0, 30).map((c) => (
-                                <button
-                                    key={c._id}
-                                    type="button"
-                                    onClick={() => toggle("contacts", c._id)}
-                                    className={chipBtn(form.contacts.includes(c._id))}
-                                >
-                                    {c.name || fmtPhone(c.phoneNumber)}
-                                </button>
-                            ))}
-                            {!allContacts?.length && (
-                                <p className="p-2 text-xs text-gray-400">
-                                    No contacts found{contactSearch ? " for that search" : ""}.
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </Field>
-
-                {(groupMemberIds.size > 0 || form.contacts.length > 0) && (
-                    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
-                        <span className="text-xs font-semibold text-emerald-700">
-                            ≈ {totalMessages.toLocaleString()} message
-                            {totalMessages === 1 ? "" : "s"}
-                        </span>
-                        {groupMemberIds.size > 0 && (
-                            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-600 shadow-sm">
-                                {groupMemberIds.size.toLocaleString()} group member
-                                {groupMemberIds.size === 1 ? "" : "s"}
-                            </span>
-                        )}
-                        {extraSpecific > 0 && (
-                            <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-600 shadow-sm">
-                                {extraSpecific.toLocaleString()} specific
-                            </span>
-                        )}
-                        {repeatCount > 1 && (
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                                har contact ko {repeatCount} baar
-                            </span>
-                        )}
+                {isDevTemplate && (
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3.5">
+                        <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                            <ThunderboltOutlined /> Dev template — audience ki
+                            zaroorat nahi
+                        </p>
+                        <p className="mt-1.5 text-[11px] leading-relaxed text-gray-700">
+                            Dev campaign sirf ek live switch hai: koi
+                            group/contact select nahi karna, koi repeat count
+                            nahi, koi schedule nahi. Campaign banane ke baad ise{" "}
+                            <b>Start</b> karo — tab template API se callable ho
+                            jata hai aur jo numbers tum API call me bhejte ho
+                            wahi send hote hain (unka live hisaab drawer ke{" "}
+                            <b>Live stats</b> me dikhta hai).
+                        </p>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field
-                        label="Har contact ko kitni baar bhejna hai"
-                        hint="1 = har contact ko 1 baar. 10 = har contact ko 10 baar"
-                    >
-                        <input
-                            type="number"
-                            min={1}
-                            value={form.sendLimit}
-                            onChange={(e) =>
-                                setForm({ ...form, sendLimit: e.target.value })
-                            }
-                            placeholder="e.g. 2"
-                            className={inputCls}
-                        />
-                    </Field>
-                    <Field
-                        label="Schedule (optional)"
-                        hint="Past blocked — minimum 1 minute aage. Empty = baad me manually start"
-                    >
-                        <DatePicker
-                            showTime
-                            needConfirm={false}
-                            value={form.scheduledAt ? dayjs(form.scheduledAt) : null}
-                            onChange={(d) =>
-                                setForm({
-                                    ...form,
-                                    scheduledAt: d ? d.toISOString() : "",
-                                })
-                            }
-                            disabledDate={(current) =>
-                                !!current &&
-                                current.isBefore(dayjs().startOf("day"))
-                            }
-                            disabledTime={(current) => {
-                                if (
-                                    !current ||
-                                    !current.isSame(dayjs(), "day")
-                                ) {
-                                    return {};
-                                }
-                                const earliest = dayjs().add(1, "minute");
-                                return {
-                                    disabledHours: () =>
-                                        Array.from(
-                                            { length: earliest.hour() },
-                                            (_, i) => i,
-                                        ),
-                                    disabledMinutes: (hour: number) =>
-                                        hour === earliest.hour()
-                                            ? Array.from(
-                                                  {
-                                                      length: earliest.minute(),
-                                                  },
-                                                  (_, i) => i,
-                                              )
-                                            : [],
-                                    disabledSeconds: () =>
-                                        Array.from(
-                                            { length: 60 },
-                                            (_, i) => i,
-                                        ),
-                                };
-                            }}
-                            placeholder="Pick date & time…"
-                            className="w-full"
-                        />
-                    </Field>
-                </div>
+                {!isDevTemplate && (
+                    <>
+                        <Field label="Groups">
+                            <div className="flex max-h-28 flex-wrap gap-1.5 overflow-y-auto rounded-xl border border-gray-200 p-2">
+                                {(groups || []).map((g) => (
+                                    <button
+                                        key={g._id}
+                                        type="button"
+                                        onClick={() => toggle("groups", g._id)}
+                                        className={chipBtn(
+                                            form.groups.includes(g._id),
+                                        )}
+                                    >
+                                        {g.name}
+                                    </button>
+                                ))}
+                                {!groups?.length && (
+                                    <p className="text-xs text-gray-400">
+                                        No groups yet.
+                                    </p>
+                                )}
+                            </div>
+                        </Field>
+
+                        <Field
+                            label="Specific contacts"
+                            hint="Group members ke alawa extra contacts yahan se add karein — dono bheje jayenge"
+                        >
+                            <div className="rounded-xl border border-gray-200">
+                                <div className="relative border-b border-gray-100 p-2">
+                                    <SearchOutlined className="absolute left-5 top-1/2 -translate-y-1/2 text-sm text-gray-400" />
+                                    <input
+                                        value={contactSearch}
+                                        onChange={(e) =>
+                                            setContactSearch(e.target.value)
+                                        }
+                                        placeholder="Search contacts to include…"
+                                        className="w-full rounded-lg pl-8 pr-2 py-1.5 text-sm outline-none placeholder:text-gray-400"
+                                    />
+                                </div>
+                                <div className="flex max-h-36 flex-wrap gap-1.5 overflow-y-auto p-2">
+                                    {(allContacts || [])
+                                        .slice(0, 30)
+                                        .map((c) => (
+                                            <button
+                                                key={c._id}
+                                                type="button"
+                                                onClick={() =>
+                                                    toggle("contacts", c._id)
+                                                }
+                                                className={chipBtn(
+                                                    form.contacts.includes(
+                                                        c._id,
+                                                    ),
+                                                )}
+                                            >
+                                                {c.name ||
+                                                    fmtPhone(c.phoneNumber)}
+                                            </button>
+                                        ))}
+                                    {!allContacts?.length && (
+                                        <p className="p-2 text-xs text-gray-400">
+                                            No contacts found
+                                            {contactSearch
+                                                ? " for that search"
+                                                : ""}
+                                            .
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </Field>
+
+                        {(groupMemberIds.size > 0 ||
+                            form.contacts.length > 0) && (
+                            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+                                <span className="text-xs font-semibold text-emerald-700">
+                                    ≈ {totalMessages.toLocaleString()} message
+                                    {totalMessages === 1 ? "" : "s"}
+                                </span>
+                                {groupMemberIds.size > 0 && (
+                                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-600 shadow-sm">
+                                        {groupMemberIds.size.toLocaleString()}{" "}
+                                        group member
+                                        {groupMemberIds.size === 1 ? "" : "s"}
+                                    </span>
+                                )}
+                                {extraSpecific > 0 && (
+                                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-emerald-600 shadow-sm">
+                                        {extraSpecific.toLocaleString()}{" "}
+                                        specific
+                                    </span>
+                                )}
+                                {repeatCount > 1 && (
+                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                        har contact ko {repeatCount} baar
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <Field
+                                label="Har contact ko kitni baar bhejna hai"
+                                hint="1 = har contact ko 1 baar. 10 = har contact ko 10 baar"
+                            >
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={form.sendLimit}
+                                    onChange={(e) =>
+                                        setForm({
+                                            ...form,
+                                            sendLimit: e.target.value,
+                                        })
+                                    }
+                                    placeholder="e.g. 2"
+                                    className={inputCls}
+                                />
+                            </Field>
+                            <Field
+                                label="Schedule (optional)"
+                                hint="Past blocked — minimum 1 minute aage. Empty = baad me manually start"
+                            >
+                                <DatePicker
+                                    showTime
+                                    needConfirm={false}
+                                    value={
+                                        form.scheduledAt
+                                            ? dayjs(form.scheduledAt)
+                                            : null
+                                    }
+                                    onChange={(d) =>
+                                        setForm({
+                                            ...form,
+                                            scheduledAt: d
+                                                ? d.toISOString()
+                                                : "",
+                                        })
+                                    }
+                                    disabledDate={(current) =>
+                                        !!current &&
+                                        current.isBefore(dayjs().startOf("day"))
+                                    }
+                                    disabledTime={(current) => {
+                                        if (
+                                            !current ||
+                                            !current.isSame(dayjs(), "day")
+                                        ) {
+                                            return {};
+                                        }
+                                        const earliest = dayjs().add(
+                                            1,
+                                            "minute",
+                                        );
+                                        return {
+                                            disabledHours: () =>
+                                                Array.from(
+                                                    { length: earliest.hour() },
+                                                    (_, i) => i,
+                                                ),
+                                            disabledMinutes: (hour: number) =>
+                                                hour === earliest.hour()
+                                                    ? Array.from(
+                                                          {
+                                                              length: earliest.minute(),
+                                                          },
+                                                          (_, i) => i,
+                                                      )
+                                                    : [],
+                                            disabledSeconds: () =>
+                                                Array.from(
+                                                    { length: 60 },
+                                                    (_, i) => i,
+                                                ),
+                                        };
+                                    }}
+                                    placeholder="Pick date & time…"
+                                    className="w-full"
+                                />
+                            </Field>
+                        </div>
+                    </>
+                )}
             </div>
         </Modal>
     );
@@ -952,14 +1119,18 @@ const CampaignFormModal: React.FC<{
 
 // ------------------------------------------------------------- Detail drawer
 
-const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onClose }) => {
+const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({
+    id,
+    onClose,
+}) => {
     const { data: campaigns } = useCampaigns();
     const { data: groups } = useContactGroups();
     const { data: tags } = useTags();
     const campaign = campaigns?.find((c) => c._id === id);
 
-    const { data: stats } = useCampaignStats(id);
-    const { data: audience } = useCampaignAudience(id);
+    const { data: stats, isLoading: statsLoading } = useCampaignStats(id);
+    const { data: audience, isLoading: audienceLoading } =
+        useCampaignAudience(id);
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState("");
     const [previewContactId, setPreviewContactId] = useState("");
@@ -968,10 +1139,21 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
     const [numSearch, setNumSearch] = useState("");
     const unschedule = useUnscheduleCampaign();
     const cancelMsg = useCancelMessage();
-    const { data: recipientsData, isFetching: fetchingRecipients } = useCampaignRecipients(
-        id,
-        { page, limit: 20, status: statusFilter || undefined },
-    );
+    const {
+        data: recipientsData,
+        isLoading: loadingRecipients,
+        isFetching: fetchingRecipients,
+    } = useCampaignRecipients(id, {
+        page,
+        limit: 20,
+        status: statusFilter || undefined,
+    });
+
+    // Only the FIRST load shows the list skeleton — the query refetches every
+    // 5s, and swapping a populated list for placeholders on every poll made the
+    // panel flicker.
+    const showRecipientsSkeleton =
+        loadingRecipients || (fetchingRecipients && !recipientsData);
 
     const start = useCampaignAction("start");
     const pause = useCampaignAction("pause");
@@ -1002,8 +1184,10 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
 
     if (!campaign) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <CenteredSpinner label="Loading campaign…" />
+            <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+                <div className="relative flex h-full w-full max-w-2xl flex-col">
+                    <DrawerSkeleton />
+                </div>
             </div>
         );
     }
@@ -1025,11 +1209,27 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
     const ds = stats?.devStats;
     const statCards: { label: string; value: number; color: string }[] = isDev
         ? [
-              { label: "API Calls", value: ds?.apiCalls ?? 0, color: "text-violet-600" },
+              {
+                  label: "API Calls",
+                  value: ds?.apiCalls ?? 0,
+                  color: "text-violet-600",
+              },
               { label: "Sent", value: ds?.sent ?? 0, color: "text-blue-600" },
-              { label: "Failed", value: ds?.failed ?? 0, color: "text-red-600" },
-              { label: "In Pipeline", value: ds?.queued ?? 0, color: "text-amber-600" },
-              { label: "Numbers", value: ds?.uniqueNumbers ?? 0, color: "text-teal-600" },
+              {
+                  label: "Failed",
+                  value: ds?.failed ?? 0,
+                  color: "text-red-600",
+              },
+              {
+                  label: "In Pipeline",
+                  value: ds?.queued ?? 0,
+                  color: "text-amber-600",
+              },
+              {
+                  label: "Numbers",
+                  value: ds?.uniqueNumbers ?? 0,
+                  color: "text-teal-600",
+              },
           ]
         : [
               {
@@ -1037,11 +1237,31 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                   value: Object.values(byStatus).reduce((a, b) => a + b, 0),
                   color: "text-gray-800",
               },
-              { label: "Sent", value: byStatus.sent ?? 0, color: "text-blue-600" },
-              { label: "Delivered", value: byStatus.delivered ?? 0, color: "text-emerald-600" },
-              { label: "Read", value: byStatus.read ?? 0, color: "text-emerald-600" },
-              { label: "Failed", value: byStatus.failed ?? 0, color: "text-red-600" },
-              { label: "Skipped", value: byStatus.skipped ?? 0, color: "text-gray-500" },
+              {
+                  label: "Sent",
+                  value: byStatus.sent ?? 0,
+                  color: "text-blue-600",
+              },
+              {
+                  label: "Delivered",
+                  value: byStatus.delivered ?? 0,
+                  color: "text-emerald-600",
+              },
+              {
+                  label: "Read",
+                  value: byStatus.read ?? 0,
+                  color: "text-emerald-600",
+              },
+              {
+                  label: "Failed",
+                  value: byStatus.failed ?? 0,
+                  color: "text-red-600",
+              },
+              {
+                  label: "Skipped",
+                  value: byStatus.skipped ?? 0,
+                  color: "text-gray-500",
+              },
           ];
 
     const liveSinceLabel = (() => {
@@ -1055,9 +1275,7 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
     })();
 
     const numbers = (ds?.perNumber || []).filter((n) =>
-        numSearch.trim()
-            ? String(n.number).includes(numSearch.trim())
-            : true,
+        numSearch.trim() ? String(n.number).includes(numSearch.trim()) : true,
     );
 
     const action = (
@@ -1124,10 +1342,15 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                         <CaretRightOutlined />,
                                         () =>
                                             start.mutate(id, {
-                                                onSuccess: () => toast.success("Campaign started"),
+                                                onSuccess: () =>
+                                                    toast.success(
+                                                        "Campaign started",
+                                                    ),
                                                 onError: (e: any) =>
                                                     toast.error(
-                                                        e?.response?.data?.message || "Failed",
+                                                        e?.response?.data
+                                                            ?.message ||
+                                                            "Failed",
                                                     ),
                                             }),
                                         start.isPending,
@@ -1139,10 +1362,15 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                             <PauseOutlined />,
                                             () =>
                                                 pause.mutate(id, {
-                                                    onSuccess: () => toast.success("Campaign paused"),
+                                                    onSuccess: () =>
+                                                        toast.success(
+                                                            "Campaign paused",
+                                                        ),
                                                     onError: (e: any) =>
                                                         toast.error(
-                                                            e?.response?.data?.message || "Failed",
+                                                            e?.response?.data
+                                                                ?.message ||
+                                                                "Failed",
                                                         ),
                                                 }),
                                             pause.isPending,
@@ -1156,10 +1384,14 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     <PauseOutlined />,
                                     () =>
                                         pause.mutate(id, {
-                                            onSuccess: () => toast.success("Campaign paused"),
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    "Campaign paused",
+                                                ),
                                             onError: (e: any) =>
                                                 toast.error(
-                                                    e?.response?.data?.message || "Failed",
+                                                    e?.response?.data
+                                                        ?.message || "Failed",
                                                 ),
                                         }),
                                     pause.isPending,
@@ -1171,10 +1403,14 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     <PauseOutlined />,
                                     () =>
                                         pause.mutate(id, {
-                                            onSuccess: () => toast.success("Campaign paused"),
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    "Campaign paused",
+                                                ),
                                             onError: (e: any) =>
                                                 toast.error(
-                                                    e?.response?.data?.message || "Failed",
+                                                    e?.response?.data
+                                                        ?.message || "Failed",
                                                 ),
                                         }),
                                     pause.isPending,
@@ -1186,10 +1422,14 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     <UndoOutlined />,
                                     () =>
                                         resume.mutate(id, {
-                                            onSuccess: () => toast.success("Campaign resumed"),
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    "Campaign resumed",
+                                                ),
                                             onError: (e: any) =>
                                                 toast.error(
-                                                    e?.response?.data?.message || "Failed",
+                                                    e?.response?.data
+                                                        ?.message || "Failed",
                                                 ),
                                         }),
                                     resume.isPending,
@@ -1204,10 +1444,14 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     <CloseCircleOutlined />,
                                     () =>
                                         cancel.mutate(id, {
-                                            onSuccess: () => toast.success("Campaign cancelled"),
+                                            onSuccess: () =>
+                                                toast.success(
+                                                    "Campaign cancelled",
+                                                ),
                                             onError: (e: any) =>
                                                 toast.error(
-                                                    e?.response?.data?.message || "Failed",
+                                                    e?.response?.data
+                                                        ?.message || "Failed",
                                                 ),
                                         }),
                                     cancel.isPending,
@@ -1223,21 +1467,31 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                             {(campaign.audience?.groups || []).map((g) => (
-                                <GrayBadge key={String(g)}>{groupName(String(g))}</GrayBadge>
+                                <GrayBadge key={String(g)}>
+                                    {groupName(String(g))}
+                                </GrayBadge>
                             ))}
                             {(campaign.audience?.tags || []).map((t) => (
-                                <GreenBadge key={String(t)}>{tagName(String(t))}</GreenBadge>
+                                <GreenBadge key={String(t)}>
+                                    {tagName(String(t))}
+                                </GreenBadge>
                             ))}
                             {(campaign.audience?.contacts || []).map((c) => (
-                                <BlueBadge key={String(c)}>{contactLabel(String(c))}</BlueBadge>
+                                <BlueBadge key={String(c)}>
+                                    {contactLabel(String(c))}
+                                </BlueBadge>
                             ))}
                             {!campaign.audience?.groups?.length &&
                                 !campaign.audience?.tags?.length &&
                                 !campaign.audience?.contacts?.length && (
-                                    <p className="text-xs text-gray-400">No audience selected.</p>
+                                    <p className="text-xs text-gray-400">
+                                        No audience selected.
+                                    </p>
                                 )}
                         </div>
-                        {audience && (
+                        {audienceLoading ? (
+                            <ChipRowSkeleton className="mt-3" />
+                        ) : audience ? (
                             <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                                 <GrayBadge>
                                     {audience.total.toLocaleString()} message
@@ -1247,21 +1501,24 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     {audience.people ??
                                         (audience.contacts || []).length}{" "}
                                     person
-                                    {(audience.people ?? (audience.contacts || []).length) ===
-                                    1
+                                    {(audience.people ??
+                                        (audience.contacts || []).length) === 1
                                         ? ""
                                         : "s"}
                                 </GrayBadge>
                                 {(audience.sendsPerContact ?? 1) > 1 && (
                                     <GrayBadge>
-                                        {audience.sendsPerContact} bar per contact
+                                        {audience.sendsPerContact} bar per
+                                        contact
                                     </GrayBadge>
                                 )}
                                 {audience.excluded > 0 && (
-                                    <RedBadge>{audience.excluded} excluded</RedBadge>
+                                    <RedBadge>
+                                        {audience.excluded} excluded
+                                    </RedBadge>
                                 )}
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
                     {/* Message preview — hidden for dev campaigns (they never
@@ -1271,33 +1528,52 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                             <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                                 <SendOutlined /> Message preview
                             </p>
-                            <div className="flex flex-wrap items-center gap-2">
-                                <select
-                                    value={previewContactId}
-                                    onChange={(e) => {
-                                        setPreviewContactId(e.target.value);
-                                        setPreviewRendered(null);
-                                    }}
-                                    className={`${selectCls} min-w-[220px] flex-1 px-3 py-2 text-xs`}
-                                >
-                                    <option value="">Pick a contact from audience…</option>
-                                    {(audience?.contacts || []).map((c) => (
-                                        <option key={c._id} value={c._id}>
-                                            {c.name || fmtPhone(c.phoneNumber)} · {fmtPhone(c.phoneNumber)}
+                            {audienceLoading ? (
+                                <FormRowSkeleton />
+                            ) : (
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <select
+                                        value={previewContactId}
+                                        onChange={(e) => {
+                                            setPreviewContactId(e.target.value);
+                                            setPreviewRendered(null);
+                                        }}
+                                        className={`${selectCls} min-w-[220px] flex-1 px-3 py-2 text-xs`}
+                                    >
+                                        <option value="">
+                                            Pick a contact from audience…
                                         </option>
-                                    ))}
-                                </select>
-                                <PrimaryButton
-                                    onClick={doPreview}
-                                    disabled={!previewContactId || previewLoading}
-                                    className="px-4 py-2 text-xs"
-                                >
-                                    {previewLoading ? <Spinner /> : <EyeOutlined />} Preview
-                                </PrimaryButton>
-                            </div>
+                                        {(audience?.contacts || []).map((c) => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.name ||
+                                                    fmtPhone(
+                                                        c.phoneNumber,
+                                                    )}{" "}
+                                                · {fmtPhone(c.phoneNumber)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <PrimaryButton
+                                        onClick={doPreview}
+                                        disabled={
+                                            !previewContactId || previewLoading
+                                        }
+                                        className="px-4 py-2 text-xs"
+                                    >
+                                        {previewLoading ? (
+                                            <Spinner />
+                                        ) : (
+                                            <EyeOutlined />
+                                        )}{" "}
+                                        Preview
+                                    </PrimaryButton>
+                                </div>
+                            )}
                             {previewRendered && (
-                                <div className="mt-3 max-w-md rounded-2xl rounded-tl-sm bg-emerald-500 px-4 py-3 text-sm text-white shadow-sm">
-                                    <p className="whitespace-pre-wrap">{previewRendered}</p>
+                                <div className="mt-3 max-w-md rounded-2xl rounded-tl-sm bg-emerald-800 px-4 py-3 text-sm text-white shadow-sm">
+                                    <p className="whitespace-pre-wrap">
+                                        {previewRendered}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -1308,23 +1584,32 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                         <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
                             <BarChartOutlined /> Statistics
                         </p>
-                        <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                            {statCards.map((s) => (
-                                <div
-                                    key={s.label}
-                                    className="rounded-2xl border border-gray-100 p-3 text-center"
-                                >
-                                    <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-                                    <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
-                                        {s.label}
-                                    </p>
-                                </div>
-                            ))}
-                        </div>
+                        {statsLoading ? (
+                            <StatTilesSkeleton />
+                        ) : (
+                            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+                                {statCards.map((s) => (
+                                    <div
+                                        key={s.label}
+                                        className="rounded-2xl border border-gray-100 p-3 text-center"
+                                    >
+                                        <p
+                                            className={`text-xl font-bold ${s.color}`}
+                                        >
+                                            {s.value}
+                                        </p>
+                                        <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                            {s.label}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Dev campaign — live status + no recipients (never sends) */}
-                    {isDev && (
+                    {isDev && statsLoading && <DevCampaignBlockSkeleton />}
+                    {isDev && !statsLoading && (
                         <div
                             className={`mb-6 rounded-2xl border p-4 ${
                                 campaign.status === "running"
@@ -1344,7 +1629,8 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                                 ? "text-emerald-700"
                                                 : campaign.status === "paused"
                                                   ? "text-amber-700"
-                                                  : campaign.status === "scheduled"
+                                                  : campaign.status ===
+                                                      "scheduled"
                                                     ? "text-blue-700"
                                                     : "text-gray-500"
                                         }`}
@@ -1373,10 +1659,14 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                         onClick={() =>
                                             unschedule.mutate(id, {
                                                 onSuccess: () =>
-                                                    toast.success("Schedule cancelled — back to draft"),
+                                                    toast.success(
+                                                        "Schedule cancelled — back to draft",
+                                                    ),
                                                 onError: (e: any) =>
                                                     toast.error(
-                                                        e?.response?.data?.message || "Failed",
+                                                        e?.response?.data
+                                                            ?.message ||
+                                                            "Failed",
                                                     ),
                                             })
                                         }
@@ -1398,16 +1688,15 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                                     ["API calls", String(ds?.apiCalls ?? 0)],
                                     ["Sent", String(ds?.sent ?? 0)],
                                     ["Failed", String(ds?.failed ?? 0)],
-                                    [
-                                        "In pipeline",
-                                        String(ds?.queued ?? 0),
-                                    ],
+                                    ["In pipeline", String(ds?.queued ?? 0)],
                                 ].map(([lbl, val]) => (
                                     <div
                                         key={lbl}
                                         className="rounded-xl bg-white/70 px-3 py-2 text-center"
                                     >
-                                        <p className="text-sm font-bold text-gray-800">{val}</p>
+                                        <p className="text-sm font-bold text-gray-800">
+                                            {val}
+                                        </p>
                                         <p className="text-[9px] font-semibold uppercase tracking-wider text-gray-400">
                                             {lbl}
                                         </p>
@@ -1420,269 +1709,315 @@ const CampaignDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                     {/* Dev campaign — called numbers (API targets) */}
                     {isDev ? (
                         <>
-                        <div className="mb-6 rounded-2xl border border-gray-100 p-4">
-                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                    <TeamOutlined /> Called numbers ({ds?.uniqueNumbers ?? 0})
-                                </p>
-                                <div className="relative">
-                                    <SearchOutlined className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
-                                    <input
-                                        value={numSearch}
-                                        onChange={(e) => setNumSearch(e.target.value)}
-                                        placeholder="Search number…"
-                                        className={`${inputCls} w-44 pl-8 py-1.5 text-xs`}
-                                    />
+                            <div className="mb-6 rounded-2xl border border-gray-100 p-4">
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                        <TeamOutlined /> Called numbers (
+                                        {ds?.uniqueNumbers ?? 0})
+                                    </p>
+                                    <div className="relative">
+                                        <SearchOutlined className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400" />
+                                        <input
+                                            value={numSearch}
+                                            onChange={(e) =>
+                                                setNumSearch(e.target.value)
+                                            }
+                                            placeholder="Search number…"
+                                            className={`${inputCls} w-44 pl-8 py-1.5 text-xs`}
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-                            {!ds?.perNumber?.length ? (
-                                <p className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
-                                    No API calls yet — jab koi number hit karega, yahan
-                                    number-wise detail dikhegi (kitni baar, sent/failed).
-                                </p>
-                            ) : numbers.length === 0 ? (
-                                <p className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400">
-                                    No numbers match "{numSearch}".
-                                </p>
-                            ) : (
-                                <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
-                                    {numbers.map((n) => (
-                                        <div
-                                            key={n.number}
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/40 px-3 py-2"
-                                        >
-                                            <div className="flex min-w-0 items-center gap-2.5">
-                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
-                                                    {String(n.number).slice(-4)}
+                                {statsLoading ? (
+                                    <RecipientListSkeleton rows={4} />
+                                ) : !ds?.perNumber?.length ? (
+                                    <p className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
+                                        No API calls yet — jab koi number hit
+                                        karega, yahan number-wise detail dikhegi
+                                        (kitni baar, sent/failed).
+                                    </p>
+                                ) : numbers.length === 0 ? (
+                                    <p className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-xs text-gray-400">
+                                        No numbers match "{numSearch}".
+                                    </p>
+                                ) : (
+                                    <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+                                        {numbers.map((n) => (
+                                            <div
+                                                key={n.number}
+                                                className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 bg-gray-50/40 px-3 py-2"
+                                            >
+                                                <div className="flex min-w-0 items-center gap-2.5">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                                                        {String(n.number).slice(
+                                                            -4,
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-gray-800">
+                                                            {fmtPhone(n.number)}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            {n.count} call
+                                                            {n.count === 1
+                                                                ? ""
+                                                                : "s"}
+                                                            {n.lastSentAt
+                                                                ? ` · last ${fmtDateTime(n.lastSentAt)}`
+                                                                : ""}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-semibold text-gray-800">
-                                                        {fmtPhone(n.number)}
-                                                    </p>
-                                                    <p className="text-[10px] text-gray-400">
-                                                        {n.count} call{n.count === 1 ? "" : "s"}
-                                                        {n.lastSentAt
-                                                            ? ` · last ${fmtDateTime(n.lastSentAt)}`
-                                                            : ""}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-                                                {n.sent > 0 && (
-                                                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                                                        {n.sent} sent
-                                                    </span>
-                                                )}
-                                                {n.queued > 0 && (
-                                                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-                                                        {n.queued} in pipeline
-                                                    </span>
-                                                )}
-                                                {n.failed > 0 && (
-                                                    <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
-                                                        {n.failed} failed
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Pipeline — in-flight messages (queued / sending / scheduled) */}
-                        <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4">
-                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600">
-                                    <SendOutlined /> In pipeline ({(ds?.pipeline?.length || 0)})
-                                </p>
-                                <p className="text-[10px] text-gray-400">
-                                    Auto-refreshes every 5s — sent hone par yahan se hat jata hai
-                                </p>
-                            </div>
-                            {!ds?.pipeline?.length ? (
-                                <p className="rounded-xl border border-dashed border-amber-200 p-5 text-center text-xs text-gray-400">
-                                    Koi message pipeline me nahi — sab sent/failed ho chuke hain.
-                                </p>
-                            ) : (
-                                <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
-                                    {ds.pipeline.map((m) => (
-                                        <div
-                                            key={m.id}
-                                            className="flex items-center justify-between gap-3 rounded-xl border border-white bg-white/80 px-3 py-2 shadow-sm"
-                                        >
-                                            <div className="flex min-w-0 items-center gap-2.5">
-                                                <div
-                                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-                                                        m.status === "sending"
-                                                            ? "bg-blue-100 text-blue-600"
-                                                            : m.status === "scheduled"
-                                                              ? "bg-violet-100 text-violet-600"
-                                                              : "bg-amber-100 text-amber-600"
-                                                    }`}
-                                                >
-                                                    {m.type === "image" ? (
-                                                        <PictureOutlined />
-                                                    ) : m.type === "text" ? (
-                                                        <FileTextOutlined />
-                                                    ) : (
-                                                        <SendOutlined />
+                                                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                                                    {n.sent > 0 && (
+                                                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                                                            {n.sent} sent
+                                                        </span>
+                                                    )}
+                                                    {n.queued > 0 && (
+                                                        <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                                                            {n.queued} in
+                                                            pipeline
+                                                        </span>
+                                                    )}
+                                                    {n.failed > 0 && (
+                                                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                                                            {n.failed} failed
+                                                        </span>
                                                     )}
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-semibold text-gray-800">
-                                                        {fmtPhone(m.number)}
-                                                    </p>
-                                                    <p className="text-[10px] text-gray-400">
-                                                        {m.status === "scheduled" && m.scheduledAt
-                                                            ? `fires at ${fmtDateTime(m.scheduledAt)}`
-                                                            : m.status === "sending"
-                                                              ? `sending since ${fmtDateTime(m.createdAt)}`
-                                                              : `queued since ${fmtDateTime(m.createdAt)}`}
-                                                    </p>
-                                                </div>
                                             </div>
-                                            <span
-                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                                                    m.status === "sending"
-                                                        ? "animate-pulse bg-blue-50 text-blue-600"
-                                                        : m.status === "scheduled"
-                                                          ? "bg-violet-50 text-violet-600"
-                                                          : "bg-amber-50 text-amber-600"
-                                                }`}
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pipeline — in-flight messages (queued / sending / scheduled) */}
+                            <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4">
+                                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600">
+                                        <SendOutlined /> In pipeline (
+                                        {ds?.pipeline?.length || 0})
+                                    </p>
+                                    <p className="text-[10px] text-gray-400">
+                                        Auto-refreshes every 5s — sent hone par
+                                        yahan se hat jata hai
+                                    </p>
+                                </div>
+                                {statsLoading ? (
+                                    <RecipientListSkeleton rows={3} />
+                                ) : !ds?.pipeline?.length ? (
+                                    <p className="rounded-xl border border-dashed border-amber-200 p-5 text-center text-xs text-gray-400">
+                                        Koi message pipeline me nahi — sab
+                                        sent/failed ho chuke hain.
+                                    </p>
+                                ) : (
+                                    <div className="max-h-64 space-y-1.5 overflow-y-auto pr-1">
+                                        {ds.pipeline.map((m) => (
+                                            <div
+                                                key={m.id}
+                                                className="flex items-center justify-between gap-3 rounded-xl border border-white bg-white/80 px-3 py-2 shadow-sm"
                                             >
-                                                {m.status}
-                                            </span>
-                                            <button
-                                                title="Cancel this message — send nahi hoga"
-                                                onClick={() =>
-                                                    cancelMsg.mutate(m.id, {
-                                                        onSuccess: () =>
-                                                            toast.success("Message cancelled"),
-                                                        onError: (e: any) =>
-                                                            toast.error(
-                                                                e?.response?.data?.message ||
-                                                                    "Cancel failed",
-                                                            ),
-                                                    })
-                                                }
-                                                disabled={
-                                                    cancelMsg.isPending &&
-                                                    cancelMsg.variables === m.id
-                                                }
-                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-300 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
-                                            >
-                                                {cancelMsg.isPending &&
-                                                cancelMsg.variables === m.id ? (
-                                                    <Spinner />
-                                                ) : (
-                                                    <CloseCircleOutlined className="text-xs" />
-                                                )}
-                                            </button>
+                                                <div className="flex min-w-0 items-center gap-2.5">
+                                                    <div
+                                                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                                                            m.status ===
+                                                            "sending"
+                                                                ? "bg-blue-100 text-blue-600"
+                                                                : m.status ===
+                                                                    "scheduled"
+                                                                  ? "bg-violet-100 text-violet-600"
+                                                                  : "bg-amber-100 text-amber-600"
+                                                        }`}
+                                                    >
+                                                        {m.type === "image" ? (
+                                                            <PictureOutlined />
+                                                        ) : m.type ===
+                                                          "text" ? (
+                                                            <FileTextOutlined />
+                                                        ) : (
+                                                            <SendOutlined />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-semibold text-gray-800">
+                                                            {fmtPhone(m.number)}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400">
+                                                            {m.status ===
+                                                                "scheduled" &&
+                                                            m.scheduledAt
+                                                                ? `fires at ${fmtDateTime(m.scheduledAt)}`
+                                                                : m.status ===
+                                                                    "sending"
+                                                                  ? `sending since ${fmtDateTime(m.createdAt)}`
+                                                                  : `queued since ${fmtDateTime(m.createdAt)}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                                                        m.status === "sending"
+                                                            ? "animate-pulse bg-blue-50 text-blue-600"
+                                                            : m.status ===
+                                                                "scheduled"
+                                                              ? "bg-violet-50 text-violet-600"
+                                                              : "bg-amber-50 text-amber-600"
+                                                    }`}
+                                                >
+                                                    {m.status}
+                                                </span>
+                                                <button
+                                                    title="Cancel this message — send nahi hoga"
+                                                    onClick={() =>
+                                                        cancelMsg.mutate(m.id, {
+                                                            onSuccess: () =>
+                                                                toast.success(
+                                                                    "Message cancelled",
+                                                                ),
+                                                            onError: (e: any) =>
+                                                                toast.error(
+                                                                    e?.response
+                                                                        ?.data
+                                                                        ?.message ||
+                                                                        "Cancel failed",
+                                                                ),
+                                                        })
+                                                    }
+                                                    disabled={
+                                                        cancelMsg.isPending &&
+                                                        cancelMsg.variables ===
+                                                            m.id
+                                                    }
+                                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-300 transition hover:bg-red-50 hover:text-red-500 disabled:opacity-50"
+                                                >
+                                                    {cancelMsg.isPending &&
+                                                    cancelMsg.variables ===
+                                                        m.id ? (
+                                                        <Spinner />
+                                                    ) : (
+                                                        <CloseCircleOutlined className="text-xs" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <div>
+                            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                                    Recipients (
+                                    {recipientsData?.pagination?.total ?? 0})
+                                    {audience?.people
+                                        ? ` · ${audience.people} person${
+                                              audience.people === 1 ? "" : "s"
+                                          }`
+                                        : ""}
+                                </p>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => {
+                                        setStatusFilter(e.target.value);
+                                        setPage(1);
+                                    }}
+                                    className={`${selectCls} w-auto min-w-[120px] px-2 py-1.5 text-xs`}
+                                >
+                                    <option value="">All statuses</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="queued">Queued</option>
+                                    <option value="sending">Sending</option>
+                                    <option value="sent">Sent</option>
+                                    <option value="delivered">Delivered</option>
+                                    <option value="read">Read</option>
+                                    <option value="failed">Failed</option>
+                                    <option value="skipped">Skipped</option>
+                                </select>
+                            </div>
+
+                            {showRecipientsSkeleton ? (
+                                <RecipientListSkeleton />
+                            ) : !recipientsData?.data?.length ? (
+                                <p className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
+                                    {campaign.status === "draft"
+                                        ? "Start the campaign to generate recipients."
+                                        : "No recipients match this filter."}
+                                </p>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {recipientsData.data.map((r) => (
+                                        <div
+                                            key={r._id}
+                                            className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2.5"
+                                        >
+                                            <Avatar
+                                                name={r.contact?.name}
+                                                size="sm"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <p className="flex items-center gap-1.5 truncate text-sm font-medium text-gray-900">
+                                                    {r.contact?.name ||
+                                                        "Unknown"}
+                                                    {(r.sequence ?? 1) > 1 && (
+                                                        <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                                            #{r.sequence}
+                                                        </span>
+                                                    )}
+                                                </p>
+                                                <p className="font-mono text-xs text-gray-400">
+                                                    {fmtPhone(r.phoneNumber)}
+                                                </p>
+                                            </div>
+                                            <p className="hidden max-w-[200px] truncate text-[11px] text-gray-400 md:block">
+                                                {r.renderedMessage}
+                                            </p>
+                                            {recipientStatusBadge(r.status)}
                                         </div>
                                     ))}
                                 </div>
                             )}
-                        </div>
-                        </>
-                    ) : (
-                    <div>
-                        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                                Recipients ({recipientsData?.pagination?.total ?? 0})
-                                {audience?.people
-                                    ? ` · ${audience.people} person${
-                                          audience.people === 1 ? "" : "s"
-                                      }`
-                                    : ""}
-                            </p>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => {
-                                    setStatusFilter(e.target.value);
-                                    setPage(1);
-                                }}
-                                className={`${selectCls} w-auto min-w-[120px] px-2 py-1.5 text-xs`}
-                            >
-                                <option value="">All statuses</option>
-                                <option value="pending">Pending</option>
-                                <option value="queued">Queued</option>
-                                <option value="sending">Sending</option>
-                                <option value="sent">Sent</option>
-                                <option value="delivered">Delivered</option>
-                                <option value="read">Read</option>
-                                <option value="failed">Failed</option>
-                                <option value="skipped">Skipped</option>
-                            </select>
-                        </div>
 
-                        {fetchingRecipients ? (
-                            <CenteredSpinner label="Loading recipients…" />
-                        ) : !recipientsData?.data?.length ? (
-                            <p className="rounded-2xl border border-dashed border-gray-200 p-6 text-center text-xs text-gray-400">
-                                {campaign.status === "draft"
-                                    ? "Start the campaign to generate recipients."
-                                    : "No recipients match this filter."}
-                            </p>
-                        ) : (
-                            <div className="space-y-1.5">
-                                {recipientsData.data.map((r) => (
-                                    <div
-                                        key={r._id}
-                                        className="flex items-center gap-3 rounded-xl border border-gray-100 px-3 py-2.5"
-                                    >
-                                        <Avatar
-                                            name={r.contact?.name}
-                                            size="sm"
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="flex items-center gap-1.5 truncate text-sm font-medium text-gray-900">
-                                                {r.contact?.name || "Unknown"}
-                                                {(r.sequence ?? 1) > 1 && (
-                                                    <span className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                                                        #{r.sequence}
-                                                    </span>
-                                                )}
-                                            </p>
-                                            <p className="font-mono text-xs text-gray-400">
-                                                {fmtPhone(r.phoneNumber)}
-                                            </p>
-                                        </div>
-                                        <p className="hidden max-w-[200px] truncate text-[11px] text-gray-400 md:block">
-                                            {r.renderedMessage}
+                            {recipientsData?.pagination &&
+                                recipientsData.pagination.totalPages > 1 && (
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <p className="text-xs text-gray-400">
+                                            Page{" "}
+                                            {recipientsData.pagination.page} of{" "}
+                                            {
+                                                recipientsData.pagination
+                                                    .totalPages
+                                            }
                                         </p>
-                                        {recipientStatusBadge(r.status)}
+                                        <div className="flex gap-1">
+                                            <SecondaryButton
+                                                disabled={
+                                                    !recipientsData.pagination
+                                                        .hasPrev
+                                                }
+                                                onClick={() =>
+                                                    setPage((p) => p - 1)
+                                                }
+                                                className="px-3 py-1.5 text-xs"
+                                            >
+                                                Prev
+                                            </SecondaryButton>
+                                            <SecondaryButton
+                                                disabled={
+                                                    !recipientsData.pagination
+                                                        .hasNext
+                                                }
+                                                onClick={() =>
+                                                    setPage((p) => p + 1)
+                                                }
+                                                className="px-3 py-1.5 text-xs"
+                                            >
+                                                Next
+                                            </SecondaryButton>
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {recipientsData?.pagination &&
-                            recipientsData.pagination.totalPages > 1 && (
-                                <div className="mt-4 flex items-center justify-between">
-                                    <p className="text-xs text-gray-400">
-                                        Page {recipientsData.pagination.page} of{" "}
-                                        {recipientsData.pagination.totalPages}
-                                    </p>
-                                    <div className="flex gap-1">
-                                        <SecondaryButton
-                                            disabled={!recipientsData.pagination.hasPrev}
-                                            onClick={() => setPage((p) => p - 1)}
-                                            className="px-3 py-1.5 text-xs"
-                                        >
-                                            Prev
-                                        </SecondaryButton>
-                                        <SecondaryButton
-                                            disabled={!recipientsData.pagination.hasNext}
-                                            onClick={() => setPage((p) => p + 1)}
-                                            className="px-3 py-1.5 text-xs"
-                                        >
-                                            Next
-                                        </SecondaryButton>
-                                    </div>
-                                </div>
-                            )}
-                    </div>
+                                )}
+                        </div>
                     )}
                 </div>
             </div>

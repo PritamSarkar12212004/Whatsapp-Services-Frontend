@@ -36,7 +36,6 @@ import {
 } from "../hooks/useCrm";
 import {
     Avatar,
-    CenteredSpinner,
     DangerButton,
     EmptyState,
     Field,
@@ -53,6 +52,10 @@ import {
     fmtPhone,
     inputCls,
 } from "../components/CrmUi";
+import {
+    ContactsTableSkeleton,
+    DrawerSkeleton,
+} from "@/components/ui/skeleton/PageSkeletons";
 import type { Contact, ContactInput } from "../types/crm.types";
 
 type TabKey = "all" | "genuine";
@@ -75,7 +78,11 @@ const ContactRow = ({
     onView: () => void;
     onDelete: () => void;
 }) => (
-    <tr className="border-b border-gray-50 transition hover:bg-gray-50/60">
+    <tr
+        className={`border-b border-gray-50 transition ${
+            selected ? "bg-emerald-50/60" : "hover:bg-gray-50/60"
+        }`}
+    >
         <td className="px-4 py-3">
             <input
                 type="checkbox"
@@ -330,7 +337,7 @@ const ContactsPage: React.FC = () => {
             {/* Table */}
             <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
                 {isLoading ? (
-                    <CenteredSpinner label="Loading contacts…" />
+                    <ContactsTableSkeleton bare />
                 ) : contacts.length === 0 ? (
                     <EmptyState
                         icon={<TeamOutlined />}
@@ -885,8 +892,10 @@ const ContactDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onCl
 
     if (isLoading || !contact) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <CenteredSpinner label="Loading contact…" />
+            <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+                <div className="relative flex h-full w-full max-w-xl flex-col">
+                    <DrawerSkeleton />
+                </div>
             </div>
         );
     }

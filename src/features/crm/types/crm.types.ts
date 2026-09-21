@@ -210,7 +210,20 @@ export interface Campaign {
   statistics: CampaignStatistics;
   /** Dev campaigns are live switches — they never send to an audience */
   devTemplate?: boolean;
-  devStats?: { liveSince: string | null; apiCalls: number };
+  /**
+   * API-call counters for dev campaigns. The campaigns list fills sent / failed /
+   * queued from the Message rows created by API calls, so the table shows real
+   * numbers even though a dev campaign never creates recipients.
+   */
+  devStats?: {
+    liveSince?: string | null;
+    apiCalls?: number;
+    sent?: number;
+    failed?: number;
+    queued?: number;
+    total?: number;
+    uniqueNumbers?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

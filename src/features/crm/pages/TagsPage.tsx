@@ -15,7 +15,6 @@ import {
     useUpdateTag,
 } from "../hooks/useCrm";
 import {
-    CenteredSpinner,
     DangerButton,
     EmptyState,
     Field,
@@ -25,6 +24,7 @@ import {
     Spinner,
     inputCls,
 } from "../components/CrmUi";
+import { TagGridSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import type { Tag } from "../types/crm.types";
 
 const PALETTE = [
@@ -71,7 +71,7 @@ const TagsPage: React.FC = () => {
             </div>
 
             {isLoading ? (
-                <CenteredSpinner label="Loading tags…" />
+                <TagGridSkeleton />
             ) : !tags?.length ? (
                 <EmptyState
                     icon={<TagsOutlined />}

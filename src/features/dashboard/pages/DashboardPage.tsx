@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
     Activity,
@@ -7,6 +7,8 @@ import {
     ArrowUpRight,
     Ban,
     CheckCircle2,
+    ChevronDown,
+    ChevronUp,
     Eye,
     Inbox,
     MessageSquare,
@@ -34,6 +36,7 @@ import {
 
 import Animation from "@/components/ui/animation/Animation";
 import Sidebar from "@/components/layout/Sidebar";
+import { DashboardAnalyticsSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import WhatsappQRCode from "@/components/ui/whatsapp/WhatsappQRCode";
 import { AnimationConst } from "@/consts/animation/AnimationConst";
 
@@ -63,11 +66,18 @@ const CHART_COLORS = [
 
 const TOOLTIP_STYLE = {
     borderRadius: 10,
-    border: "1px solid #e5e7eb",
-    boxShadow: "0 8px 24px rgba(15, 23, 42, 0.08)",
+    border: "1px solid #243049",
+    background: "#151e31",
+    color: "#e6ebf5",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.45)",
     fontSize: 12,
     padding: "8px 12px",
 };
+
+const TOOLTIP_LABEL_STYLE = { color: "#e6ebf5" };
+const TOOLTIP_ITEM_STYLE = { color: "#cbd5e1" };
+const LEGEND_STYLE = { fontSize: 12, color: "#94a3b8" };
+const GRID_STROKE = "#243049";
 
 const AXIS_TICK = { fontSize: 11, fill: "#94a3b8" } as const;
 
@@ -192,11 +202,15 @@ function DonutChart({
                             />
                         ))}
                     </Pie>
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Tooltip
+                        contentStyle={TOOLTIP_STYLE}
+                        labelStyle={TOOLTIP_LABEL_STYLE}
+                        itemStyle={TOOLTIP_ITEM_STYLE}
+                    />
                     <Legend
                         iconType="circle"
                         iconSize={7}
-                        wrapperStyle={{ fontSize: 12, color: "#64748b" }}
+                        wrapperStyle={LEGEND_STYLE}
                     />
                 </PieChart>
             </ResponsiveContainer>
@@ -266,7 +280,18 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
     const messageTypes: BreakdownSlice[] = analytics?.messageTypes ?? [];
     const activityFeed = analytics?.activityFeed ?? [];
 
+    // The feed can hold a dozen entries; keeping it collapsed stops the page
+    // from growing into a long scroll.
+    const ACTIVITY_PREVIEW = 4;
+    const [showAllActivity, setShowAllActivity] = useState(false);
+    const visibleActivity = showAllActivity
+        ? activityFeed
+        : activityFeed.slice(0, ACTIVITY_PREVIEW);
+    const hasMoreActivity = activityFeed.length > ACTIVITY_PREVIEW;
+
     const timelineTotal = timeline.reduce((sum, d) => sum + d.total, 0);
+    const timelineDelivered = timeline.reduce((sum, d) => sum + d.delivered, 0);
+    const timelineRead = timeline.reduce((sum, d) => sum + d.read, 0);
 
     return (
         <div className="lg:ml-64 p-4 lg:p-8">
@@ -292,8 +317,14 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
 
                     <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white">
                         <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                            <span
+                                style={{ backgroundColor: "#ffffff" }}
+                                className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60"
+                            />
+                            <span
+                                style={{ backgroundColor: "#ffffff" }}
+                                className="relative inline-flex h-2 w-2 rounded-full bg-white"
+                            />
                         </span>
                         Connected
                     </span>
@@ -326,13 +357,7 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                 </div>
             </div>
 
-            {isAnalyticsLoading && (
-                <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="h-28 animate-pulse rounded-xl bg-gray-100" />
-                    ))}
-                </div>
-            )}
+            {isAnalyticsLoading && <DashboardAnalyticsSkeleton />}
 
             {isAnalyticsError && (
                 <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-6 text-center">
@@ -442,7 +467,7 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                             </defs>
                                             <CartesianGrid
                                                 strokeDasharray="3 3"
-                                                stroke="#f1f5f9"
+                                                stroke={GRID_STROKE}
                                                 vertical={false}
                                             />
                                             <XAxis
@@ -458,14 +483,15 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                                 tickLine={false}
                                                 allowDecimals={false}
                                             />
-                                            <Tooltip contentStyle={TOOLTIP_STYLE} />
+                                            <Tooltip
+                                                contentStyle={TOOLTIP_STYLE}
+                                                labelStyle={TOOLTIP_LABEL_STYLE}
+                                                itemStyle={TOOLTIP_ITEM_STYLE}
+                                            />
                                             <Legend
                                                 iconType="circle"
                                                 iconSize={7}
-                                                wrapperStyle={{
-                                                    fontSize: 12,
-                                                    color: "#64748b",
-                                                }}
+                                                wrapperStyle={LEGEND_STYLE}
                                             />
                                             <Area
                                                 type="monotone"
@@ -495,6 +521,14 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
+                            )}
+                            {timelineTotal > 0 && timelineDelivered === 0 && (
+                                <p className="mt-3 text-xs text-gray-400">
+                                    Delivered / Read lines fill in as WhatsApp sends delivery
+                                    and read receipts — {timelineRead} read so far. Receipts
+                                    are only recorded from the moment the WhatsApp session
+                                    was connected, so older messages stay at “Sent”.
+                                </p>
                             )}
                         </ChartCard>
 
@@ -528,7 +562,7 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                         >
                                             <CartesianGrid
                                                 strokeDasharray="3 3"
-                                                stroke="#f1f5f9"
+                                                stroke={GRID_STROKE}
                                                 vertical={false}
                                             />
                                             <XAxis
@@ -547,7 +581,12 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                                 tickLine={false}
                                                 allowDecimals={false}
                                             />
-                                            <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "#f8fafc" }} />
+                                            <Tooltip
+                                        contentStyle={TOOLTIP_STYLE}
+                                        labelStyle={TOOLTIP_LABEL_STYLE}
+                                        itemStyle={TOOLTIP_ITEM_STYLE}
+                                        cursor={{ fill: "#1b2740" }}
+                                    />
                                             <Bar
                                                 dataKey="sent"
                                                 name="Sent"
@@ -637,8 +676,15 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                             {activityFeed.length === 0 ? (
                                 <EmptyChart title="No activity yet. Syncing contacts or sending messages will appear here." />
                             ) : (
-                                <ul className="divide-y divide-gray-100">
-                                    {activityFeed.map((activity) => {
+                                <>
+                                <ul
+                                    className={`divide-y divide-gray-100 ${
+                                        showAllActivity
+                                            ? "max-h-96 overflow-y-auto pr-1"
+                                            : ""
+                                    }`}
+                                >
+                                    {visibleActivity.map((activity) => {
                                         const meta = ACTIVITY_ICONS[activity.type] ?? {
                                             icon: Activity,
                                             className: "bg-gray-100 text-gray-500",
@@ -674,6 +720,35 @@ function ConnectedDashboard({ phoneNumber }: { phoneNumber: string }) {
                                         );
                                     })}
                                 </ul>
+
+                                {hasMoreActivity && (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShowAllActivity((v) => !v)
+                                        }
+                                        className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-gray-100 py-2 text-xs font-medium text-gray-500 transition hover:bg-gray-50 hover:text-gray-700"
+                                    >
+                                        {showAllActivity ? (
+                                            <>
+                                                Show less
+                                                <ChevronUp
+                                                    className="h-3.5 w-3.5"
+                                                    strokeWidth={2}
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                Show all {activityFeed.length}
+                                                <ChevronDown
+                                                    className="h-3.5 w-3.5"
+                                                    strokeWidth={2}
+                                                />
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                                </>
                             )}
                         </ChartCard>
                     </div>
@@ -844,7 +919,10 @@ function DashboardPage() {
                             )}
 
                             {!isQRLoading && !isQRError && qrData?.qr && (
-                                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                                <div
+                                    className="rounded-xl border border-gray-200 p-4"
+                                    style={{ backgroundColor: "#ffffff" }}
+                                >
                                     <WhatsappQRCode
                                         value={qrData.qr}
                                         size={220}

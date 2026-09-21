@@ -1,8 +1,7 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import Sidebar from "@/components/layout/Sidebar";
-import Animation from "@/components/ui/animation/Animation";
-import { AnimationConst } from "@/consts/animation/AnimationConst";
+import { GroupAutomationSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import { useWhatsappGroupDetail } from "@/features/groups/hooks/useWhatsappGroupDetail";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 
@@ -22,15 +21,7 @@ const GroupAutomationPage: React.FC = () => {
     if (isLoading) {
         return (
             <Shell>
-                <div className="flex flex-1 items-center justify-center">
-                    <Animation
-                        source={AnimationConst.Loader}
-                        height={200}
-                        width={200}
-                        loop={true}
-                        className="mx-auto"
-                    />
-                </div>
+                <GroupAutomationSkeleton />
             </Shell>
         );
     }

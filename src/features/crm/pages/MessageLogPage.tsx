@@ -8,7 +8,10 @@ import {
     SearchOutlined,
     CheckOutlined,
     ExportOutlined,
+    ClockCircleOutlined,
+    CloseCircleOutlined,
 } from "@ant-design/icons";
+import { CheckCheck } from "lucide-react";
 import {
     useCampaigns,
     useContacts,
@@ -20,7 +23,6 @@ import {
 import {
     Avatar,
     BlueBadge,
-    CenteredSpinner,
     EmptyState,
     Field,
     GrayBadge,
@@ -35,7 +37,15 @@ import {
     inputCls,
     selectCls,
 } from "../components/CrmUi";
-import type { MessageDirection, MessageStatus } from "../types/crm.types";
+import {
+    DrawerSkeleton,
+    MessagesTableSkeleton,
+} from "@/components/ui/skeleton/PageSkeletons";
+import type {
+    Message,
+    MessageDirection,
+    MessageStatus,
+} from "../types/crm.types";
 
 const DIRECTIONS: { value: MessageDirection | "all"; label: string }[] = [
     { value: "all", label: "All directions" },
@@ -65,6 +75,60 @@ const statusBadge = (status: MessageStatus) => {
         failed: <RedBadge small>Failed</RedBadge>,
     };
     return map[status];
+};
+
+/**
+ * WhatsApp-style delivery ticks, so "was it delivered / seen?" is readable at a
+ * glance in the list: ✓ sent · ✓✓ delivered · ✓✓ (sky) read · ⏱ queued.
+ * Hovering shows the exact sent / delivered / seen timestamps.
+ */
+const deliveryTicks = (m: Message) => {
+    if (m.direction === "inbound") return null;
+
+    const stamp = (label: string, at?: string | null) =>
+        `${label}: ${at ? fmtDateTime(at) : "—"}`;
+    const title = [
+        stamp("Sent", m.sentAt),
+        stamp("Delivered", m.deliveredAt),
+        stamp("Seen", m.readAt),
+        m.error ? `Error: ${m.error}` : "",
+    ]
+        .filter(Boolean)
+        .join("\n");
+
+    if (m.status === "failed")
+        return (
+            <span title={title} className="text-red-500">
+                <CloseCircleOutlined />
+            </span>
+        );
+
+    if (m.status === "read")
+        return (
+            <span title={title} className="text-sky-400">
+                <CheckCheck size={15} strokeWidth={2.5} />
+            </span>
+        );
+
+    if (m.status === "delivered")
+        return (
+            <span title={title} className="text-gray-400">
+                <CheckCheck size={15} strokeWidth={2.5} />
+            </span>
+        );
+
+    if (["pending", "queued", "sending", "scheduled"].includes(m.status))
+        return (
+            <span title={title} className="text-gray-400">
+                <ClockCircleOutlined />
+            </span>
+        );
+
+    return (
+        <span title={title} className="text-gray-400">
+            <CheckOutlined />
+        </span>
+    );
 };
 
 const MessageLogPage: React.FC = () => {
@@ -158,7 +222,7 @@ const MessageLogPage: React.FC = () => {
             {/* Table */}
             <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
                 {isLoading ? (
-                    <CenteredSpinner label="Loading messages…" />
+                    <MessagesTableSkeleton bare />
                 ) : messages.length === 0 ? (
                     <EmptyState
                         icon={<MessageOutlined />}
@@ -213,7 +277,12 @@ const MessageLogPage: React.FC = () => {
                                                 <GrayBadge small>Inbound</GrayBadge>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3">{statusBadge(m.status)}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                {deliveryTicks(m)}
+                                                {statusBadge(m.status)}
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-3">
                                             <p className="max-w-[260px] truncate text-xs text-gray-600">
                                                 {m.content || "—"}
@@ -480,9 +549,9 @@ const SendMessageModal: React.FC<{ open: boolean; onClose: () => void }> = ({
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                             Preview
                         </p>
-                        <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-500 px-4 py-3 text-sm text-white shadow-sm">
+                        <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-800 px-4 py-3 text-sm text-white shadow-sm">
                             <p className="whitespace-pre-wrap">{rendered}</p>
-                            <p className="mt-2 text-right text-[10px] text-emerald-100">
+                            <p className="mt-2 text-right text-[10px] font-medium text-emerald-100/90">
                                 {new Date().toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
@@ -503,8 +572,10 @@ const MessageDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onCl
 
     if (isLoading || !message) {
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <CenteredSpinner label="Loading message…" />
+            <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+                <div className="relative flex h-full w-full max-w-xl flex-col">
+                    <DrawerSkeleton />
+                </div>
             </div>
         );
     }
@@ -513,9 +584,11 @@ const MessageDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onCl
         { label: "Created", at: message.createdAt },
         { label: "Sent", at: message.sentAt },
         { label: "Delivered", at: message.deliveredAt },
-        { label: "Read", at: message.readAt },
+        { label: "Read (seen)", at: message.readAt },
         { label: "Failed", at: message.failedAt },
     ];
+
+    const outbound = message.direction === "outbound";
 
     return (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
@@ -557,9 +630,9 @@ const MessageDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onCl
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                             Message
                         </p>
-                        <div className="max-w-md rounded-2xl rounded-tl-sm bg-emerald-500 px-4 py-3 text-sm text-white shadow-sm">
+                        <div className="max-w-md rounded-2xl rounded-tl-sm bg-emerald-800 px-4 py-3 text-sm text-white shadow-sm">
                             <p className="whitespace-pre-wrap">{message.content || "—"}</p>
-                            <p className="mt-2 text-right text-[10px] text-emerald-100">
+                            <p className="mt-2 text-right text-[10px] font-medium text-emerald-100/90">
                                 {fmtDateTime(message.createdAt)}
                             </p>
                         </div>
@@ -595,6 +668,12 @@ const MessageDrawer: React.FC<{ id: string; onClose: () => void }> = ({ id, onCl
                                 </div>
                             ))}
                         </div>
+                        {outbound && !message.readAt && message.status !== "failed" && (
+                            <p className="mt-3 rounded-xl bg-gray-50 px-3 py-2 text-xs text-gray-500">
+                                Not seen yet — WhatsApp reports “seen” once the contact opens
+                                the chat.
+                            </p>
+                        )}
                         {message.error && (
                             <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-600">
                                 Error: {message.error}

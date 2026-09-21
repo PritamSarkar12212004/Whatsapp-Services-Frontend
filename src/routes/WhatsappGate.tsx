@@ -1,14 +1,23 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import Animation from "@/components/ui/animation/Animation";
 import WhatsappQRCode from "@/components/ui/whatsapp/WhatsappQRCode";
 import { AnimationConst } from "@/consts/animation/AnimationConst";
 import { useWhatsappConnect } from "@/features/dashboard/hooks/useWhatsappConnect";
+import { useWhatsappDisconnect } from "@/features/dashboard/hooks/useWhatsappDisconnect";
 import { useWhatsappQR } from "@/features/dashboard/hooks/useWhatsappQR";
 import { useWhatsappStatus } from "@/features/dashboard/hooks/useWhatsappStatus";
 import { useStoreBascData } from "@/store/zustand/user/useStoreBascData";
 import { useStoreToken } from "@/store/zustand/token/useStoreToken";
+
+/**
+ * After this long in "connecting" (no QR, no error) the screen stops pretending
+ * everything is fine and offers the recovery actions. The backend watchdog is
+ * more patient than this, so we only surface it — never act on our own.
+ */
+const SLOW_CONNECT_SECONDS = 20;
 
 /**
  * Gates the whole app behind an active WhatsApp connection.
@@ -39,6 +48,11 @@ const WhatsappGate = () => {
     } = useWhatsappConnect();
 
     const {
+        mutate: disconnectWhatsApp,
+        isPending: isResetting,
+    } = useWhatsappDisconnect();
+
+    const {
         data: qrData,
         isFetching: isQRLoading,
         isError: isQRError,
@@ -47,6 +61,35 @@ const WhatsappGate = () => {
 
     const connectTriggeredRef = useRef(false);
     const qrFetchedRef = useRef(false);
+
+    // How long the current connect attempt has been running — a stuck socket
+    // used to look identical to a slow one, so the screen spun forever.
+    const [elapsed, setElapsed] = useState(0);
+    const [attempt, setAttempt] = useState(0);
+    const attemptStartRef = useRef(0);
+
+    const status = data?.status;
+    const waitingForQR = status === "qr_required";
+    const showsBusyState = !waitingForQR;
+
+    useEffect(() => {
+        if (!showsBusyState) return;
+
+        attemptStartRef.current = Date.now();
+        const id = setInterval(() => {
+            setElapsed(
+                Math.floor((Date.now() - attemptStartRef.current) / 1000),
+            );
+        }, 1000);
+
+        return () => clearInterval(id);
+    }, [showsBusyState, attempt]);
+
+    /** Restart the elapsed counter (called when a new attempt is started). */
+    const restartAttempt = () => {
+        setElapsed(0);
+        setAttempt((a) => a + 1);
+    };
 
     // Auto-start the connection after a logout / disconnect so the QR code
     // appears by itself — the user shouldn't have to click anything.
@@ -97,10 +140,47 @@ const WhatsappGate = () => {
         refetchStatus();
     };
 
-    const handleRetryConnect = () => {
+    /** Rebuild the socket (new QR request) without unlinking the device. */
+    const handleReconnect = () => {
+        restartAttempt();
         resetConnect();
-        connectWhatsApp(undefined, {
-            onSuccess: () => refetchStatus(),
+        connectWhatsApp(
+            { force: true },
+            {
+                onSuccess: () => {
+                    qrFetchedRef.current = false;
+                    refetchStatus();
+                },
+                onError: () => refetchStatus(),
+            },
+        );
+    };
+
+    /**
+     * Last resort: full logout + connect. Unlinks the device and drops the saved
+     * credentials, so a fresh QR code is guaranteed even if the session is
+     * wedged server-side. Contacts / templates / campaigns stay untouched.
+     */
+    const handleResetSession = () => {
+        restartAttempt();
+        disconnectWhatsApp(undefined, {
+            onSuccess: () => {
+                qrFetchedRef.current = false;
+                connectTriggeredRef.current = false;
+                connectWhatsApp(
+                    { force: true },
+                    {
+                        onSuccess: () => {
+                            qrFetchedRef.current = false;
+                            refetchStatus();
+                        },
+                        onError: () => refetchStatus(),
+                    },
+                );
+                toast.success("WhatsApp session reset — naya QR generate ho raha hai");
+            },
+            onError: () =>
+                toast.error("WhatsApp session reset nahi ho paya — dobara try karo"),
         });
     };
 
@@ -156,6 +236,10 @@ const WhatsappGate = () => {
 
     // ==================== NOT CONNECTED — QR ONLY ====================
     const showQRCard = data?.status === "qr_required";
+    const isSlow = showQRCard
+        ? !qrData?.qr && !isQRLoading
+        : elapsed >= SLOW_CONNECT_SECONDS || data?.status === "error";
+    const busy = isConnecting || isResetting;
 
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-50 p-6">
@@ -201,7 +285,10 @@ const WhatsappGate = () => {
                             )}
 
                             {!isQRLoading && !isQRError && qrData?.qr && (
-                                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                                <div
+                                    className="rounded-xl border border-gray-200 p-4"
+                                    style={{ backgroundColor: "#ffffff" }}
+                                >
                                     <WhatsappQRCode
                                         value={qrData.qr}
                                         size={220}
@@ -240,7 +327,7 @@ const WhatsappGate = () => {
                     </>
                 ) : (
                     <div className="mt-6 flex flex-col items-center gap-4">
-                        {isConnecting && (
+                        {(busy || data?.status === "connecting") && (
                             <Animation
                                 source={AnimationConst.Loader}
                                 height={160}
@@ -257,10 +344,24 @@ const WhatsappGate = () => {
                                         : "Failed to connect WhatsApp."}
                                 </p>
                                 <button
-                                    onClick={handleRetryConnect}
-                                    className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700"
+                                    onClick={handleReconnect}
+                                    disabled={busy}
+                                    className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
                                     Retry
+                                </button>
+                            </>
+                        ) : data?.status === "error" ? (
+                            <>
+                                <p className="text-sm text-red-500">
+                                    WhatsApp session start nahi ho payi.
+                                </p>
+                                <button
+                                    onClick={handleReconnect}
+                                    disabled={busy}
+                                    className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                    Reconnect
                                 </button>
                             </>
                         ) : (
@@ -268,14 +369,52 @@ const WhatsappGate = () => {
                                 <p className="text-lg font-medium text-gray-700">
                                     Connecting to WhatsApp...
                                 </p>
+                                <p className="text-xs text-gray-400 tabular-nums">
+                                    {elapsed}s
+                                </p>
                                 <button
-                                    onClick={handleRetryConnect}
-                                    className="mt-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                                    onClick={handleReconnect}
+                                    disabled={busy}
+                                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
-                                    Retry
+                                    {isConnecting ? "Connecting..." : "Retry"}
                                 </button>
                             </>
                         )}
+                    </div>
+                )}
+
+                {/* Stuck-state escape hatch. The backend rebuilds a wedged socket
+                    on its own, but the user should never be a hostage of a
+                    screen with a single spinner. */}
+                {(isSlow || isQRError) && (
+                    <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left">
+                        <p className="text-xs font-semibold text-gray-800">
+                            Ye zyada time le raha hai
+                        </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-gray-500">
+                            {showQRCard
+                                ? "QR load nahi ho raha. Session reset karne se device unlink hota hai aur turant naya QR milta hai — contacts, templates aur campaigns safe rehte hain."
+                                : "WhatsApp socket jawab nahi de raha. Reconnect se naya connection banta hai; agar wo bhi na chale to session reset karo (naya QR milega)."}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                                onClick={handleReconnect}
+                                disabled={busy}
+                                className="rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isConnecting ? "Reconnecting..." : "Reconnect"}
+                            </button>
+                            <button
+                                onClick={handleResetSession}
+                                disabled={busy}
+                                className="rounded-lg bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {isResetting
+                                    ? "Resetting..."
+                                    : "Reset session & get fresh QR"}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

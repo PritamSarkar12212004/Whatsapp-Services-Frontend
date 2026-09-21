@@ -84,38 +84,58 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* ============================================================
+   Dark theme — deep slate-navy surfaces with an emerald accent.
+   ============================================================ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #0b1220;
+  --foreground: #e6ebf5;
+  --card: #151e31;
+  --card-foreground: #e6ebf5;
+  --popover: #151e31;
+  --popover-foreground: #e6ebf5;
+  --primary: #10b981;
+  --primary-foreground: #04140e;
+  --secondary: #1b2740;
+  --secondary-foreground: #e6ebf5;
+  --muted: #1b2740;
+  --muted-foreground: #9aa8bf;
+  --accent: #1e2b47;
+  --accent-foreground: #e6ebf5;
+  --destructive: #f87171;
+  --border: #243049;
+  --input: #243049;
+  --ring: #34d399;
+  --chart-1: #34d399;
+  --chart-2: #60a5fa;
+  --chart-3: #c084fc;
+  --chart-4: #fbbf24;
+  --chart-5: #f87171;
+  --sidebar: #0f1729;
+  --sidebar-foreground: #e6ebf5;
+  --sidebar-primary: #10b981;
+  --sidebar-primary-foreground: #04140e;
+  --sidebar-accent: #1b2740;
+  --sidebar-accent-foreground: #e6ebf5;
+  --sidebar-border: #1f2a42;
+  --sidebar-ring: #34d399;
+
+  /* Surface scale referenced by the utility remap below. */
+  --surface: #151e31;
+  --surface-2: #1b2740;
+  --surface-3: #1e2b47;
+  --hover: #223050;
+  --hover-strong: #2b3a5c;
+  --line-soft: #1f2a42;
+  --line: #243049;
+  --line-strong: #33425f;
+  --tx: #e6ebf5;
+  --tx-muted: #a5b2c8;
+  --tx-dim: #98a5bd;
+  --tx-dimmer: #9aa8bf;
+  --skeleton: #26334d;
+
+  color-scheme: dark;
 }
 
 @layer base {
@@ -128,4 +148,348 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ============================================================
+   Dark theme utility remap
+
+   The app was authored with light-only Tailwind utilities
+   (bg-white, text-gray-900, border-gray-200, ...). These
+   unlayered overrides re-map those exact class names onto the
+   dark surface scale so every screen adapts at once. Unlayered
+   rules beat Tailwind's layered utilities, and each selector
+   carries an extra `.dark` class for higher specificity.
+   ============================================================ */
+
+/* ---- Surfaces ---- */
+.dark .bg-white {
+  background-color: var(--surface);
+}
+.dark .bg-white\/70 {
+  background-color: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+.dark .bg-white\/80 {
+  background-color: color-mix(in srgb, var(--surface) 80%, transparent);
+}
+.dark .bg-gray-50 {
+  background-color: var(--surface-2);
+}
+.dark .bg-gray-50\/40,
+.dark .bg-gray-50\/50,
+.dark .bg-gray-50\/60,
+.dark .bg-gray-50\/70 {
+  background-color: var(--surface-2);
+}
+.dark .bg-gray-100 {
+  background-color: var(--hover);
+}
+.dark .bg-gray-200,
+.dark .bg-gray-300 {
+  background-color: var(--line-strong);
+}
+.dark .bg-gray-200\/80 {
+  background-color: var(--skeleton);
+}
+.dark .bg-slate-50,
+.dark .bg-zinc-50,
+.dark .bg-neutral-50 {
+  background-color: var(--surface-2);
+}
+
+/* ---- Interactive surfaces ---- */
+.dark .focus\:bg-white:focus {
+  background-color: var(--surface-3);
+}
+.dark .hover\:bg-white:hover {
+  background-color: var(--surface-3);
+}
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--hover);
+}
+/* Translucent hover shades (table rows use hover:bg-gray-50\/60). Without
+   these the hover kept Tailwind's near-white rgb(249 250 251) and every row
+   flashed a light theme on the dark UI. */
+.dark .hover\:bg-gray-50\/40:hover,
+.dark .hover\:bg-gray-50\/50:hover,
+.dark .hover\:bg-gray-50\/60:hover,
+.dark .hover\:bg-gray-50\/70:hover,
+.dark .hover\:bg-gray-50\/80:hover,
+.dark .hover\:bg-slate-50\/60:hover {
+  background-color: var(--hover);
+}
+.dark .hover\:bg-gray-100\/60:hover,
+.dark .hover\:bg-gray-100\/80:hover {
+  background-color: var(--hover-strong);
+}
+.dark .hover\:bg-gray-200:hover {
+  background-color: var(--hover-strong);
+}
+.dark .hover\:bg-gray-600:hover {
+  background-color: #475569;
+}
+
+/* ---- Text ---- */
+.dark .text-black,
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: var(--tx);
+}
+.dark .text-gray-700 {
+  color: #cbd5e1;
+}
+.dark .text-gray-600 {
+  color: #b6c2d6;
+}
+.dark .text-gray-500 {
+  color: var(--tx-muted);
+}
+.dark .text-gray-400 {
+  color: var(--tx-dim);
+}
+.dark .text-gray-300 {
+  color: var(--tx-dimmer);
+}
+.dark .text-gray-200 {
+  color: #c3cddd;
+}
+.dark .hover\:text-gray-900:hover,
+.dark .hover\:text-gray-800:hover,
+.dark .hover\:text-gray-700:hover,
+.dark .hover\:text-gray-600:hover {
+  color: var(--tx);
+}
+
+/* ---- Borders & dividers ---- */
+.dark .border-gray-50,
+.dark .border-gray-100 {
+  border-color: var(--line-soft);
+}
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: var(--line);
+}
+.dark .hover\:border-gray-300:hover {
+  border-color: var(--line-strong);
+}
+.dark .divide-gray-50 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--line-soft);
+}
+
+/* ---- Rings ---- */
+.dark .ring-gray-100,
+.dark .ring-gray-200,
+.dark .ring-gray-300 {
+  --tw-ring-color: var(--line);
+}
+
+/* ---- Placeholders ---- */
+.dark .placeholder-gray-400::placeholder,
+.dark .placeholder\:text-gray-400::placeholder {
+  color: var(--tx-dim);
+}
+
+/* ---- Emerald (brand) ---- */
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.14);
+}
+.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.2);
+}
+.dark .bg-emerald-200 {
+  background-color: rgba(16, 185, 129, 0.28);
+}
+.dark .text-emerald-600,
+.dark .text-emerald-700,
+.dark .hover\:text-emerald-600:hover,
+.dark .hover\:text-emerald-700:hover {
+  color: #34d399;
+}
+.dark .border-emerald-100 {
+  border-color: rgba(16, 185, 129, 0.28);
+}
+.dark .border-emerald-200,
+.dark .border-emerald-300 {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.dark .ring-emerald-100,
+.dark .ring-emerald-200 {
+  --tw-ring-color: rgba(16, 185, 129, 0.35);
+}
+.dark .hover\:bg-emerald-50:hover {
+  background-color: rgba(16, 185, 129, 0.14);
+}
+.dark .hover\:bg-emerald-100:hover {
+  background-color: rgba(16, 185, 129, 0.24);
+}
+.dark .hover\:border-emerald-300:hover,
+.dark .hover\:border-emerald-400:hover {
+  border-color: rgba(16, 185, 129, 0.55);
+}
+
+/* ---- Amber ---- */
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.14);
+}
+.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.2);
+}
+.dark .text-amber-600,
+.dark .text-amber-700,
+.dark .text-amber-800 {
+  color: #fbbf24;
+}
+.dark .border-amber-200 {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+.dark .hover\:bg-amber-50:hover {
+  background-color: rgba(245, 158, 11, 0.14);
+}
+.dark .hover\:text-amber-600:hover {
+  color: #fbbf24;
+}
+
+/* ---- Blue ---- */
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.14);
+}
+.dark .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+.dark .text-blue-600,
+.dark .text-blue-700 {
+  color: #60a5fa;
+}
+.dark .border-blue-200 {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+.dark .ring-blue-200 {
+  --tw-ring-color: rgba(59, 130, 246, 0.35);
+}
+.dark .hover\:bg-blue-50:hover {
+  background-color: rgba(59, 130, 246, 0.14);
+}
+
+/* ---- Red / danger ---- */
+.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.14);
+}
+.dark .bg-red-100 {
+  background-color: rgba(239, 68, 68, 0.2);
+}
+.dark .text-red-500,
+.dark .text-red-600,
+.dark .text-red-700,
+.dark .hover\:text-red-500:hover,
+.dark .hover\:text-red-600:hover {
+  color: #f87171;
+}
+.dark .border-red-200,
+.dark .border-red-300 {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.dark .hover\:bg-red-50:hover {
+  background-color: rgba(239, 68, 68, 0.14);
+}
+.dark .hover\:bg-red-100:hover {
+  background-color: rgba(239, 68, 68, 0.24);
+}
+.dark .hover\:border-red-300:hover {
+  border-color: rgba(239, 68, 68, 0.55);
+}
+
+/* ---- Purple / violet / cyan / rose / teal / sky / indigo / green ---- */
+.dark .bg-violet-50,
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.14);
+}
+.dark .bg-violet-100 {
+  background-color: rgba(168, 85, 247, 0.2);
+}
+.dark .text-violet-600,
+.dark .text-violet-700,
+.dark .text-purple-700 {
+  color: #c084fc;
+}
+.dark .bg-sky-50 {
+  background-color: rgba(14, 165, 233, 0.14);
+}
+.dark .text-sky-600 {
+  color: #38bdf8;
+}
+.dark .bg-indigo-50 {
+  background-color: rgba(99, 102, 241, 0.14);
+}
+.dark .bg-green-50 {
+  background-color: rgba(34, 197, 94, 0.14);
+}
+.dark .bg-rose-50 {
+  background-color: rgba(244, 63, 94, 0.14);
+}
+.dark .bg-purple-100 {
+  background-color: rgba(168, 85, 247, 0.2);
+}
+.dark .bg-rose-100 {
+  background-color: rgba(244, 63, 94, 0.2);
+}
+.dark .bg-cyan-50 {
+  background-color: rgba(6, 182, 212, 0.14);
+}
+.dark .bg-cyan-100 {
+  background-color: rgba(6, 182, 212, 0.2);
+}
+.dark .bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.14);
+}
+.dark .text-cyan-700 {
+  color: #22d3ee;
+}
+.dark .text-rose-700 {
+  color: #fb7185;
+}
+.dark .text-teal-700 {
+  color: #2dd4bf;
+}
+
+/* ---- Translucent accent tints ---- */
+.dark .bg-emerald-50\/40,
+.dark .bg-emerald-50\/60 {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+.dark .bg-amber-50\/40 {
+  background-color: rgba(245, 158, 11, 0.1);
+}
+.dark .bg-amber-200\/80 {
+  background-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ---- Shadows ---- */
+.dark .shadow-gray-200\/60 {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.45),
+    0 8px 10px -6px rgba(0, 0, 0, 0.45);
+}
+.dark .shadow-gray-100 {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Scrollbars ---- */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--hover-strong);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3a4c73;
+  background-clip: content-box;
 }

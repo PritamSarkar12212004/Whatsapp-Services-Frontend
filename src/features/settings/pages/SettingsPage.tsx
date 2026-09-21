@@ -4,6 +4,8 @@ import { useStoreBascData } from "@/store/zustand/user/useStoreBascData";
 import { useStoreToken } from "@/store/zustand/token/useStoreToken";
 import { useWhatsappProfile } from "@/features/settings/hooks/useWhatsappProfile";
 import { useUpdateWhatsappProfile } from "@/features/settings/hooks/useUpdateWhatsappProfile";
+import { Skeleton, SkeletonCircle } from "@/components/ui/skeleton/Skeleton";
+import { WhatsappProfileFieldsSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import { toast } from "sonner";
 import {
     CheckOutlined,
@@ -260,6 +262,19 @@ const SettingsPage: React.FC = () => {
                                 </div>
                             </div>
 
+                            {isWaProfileLoading ? (
+                                <div className="mt-6 flex items-center gap-4">
+                                    <SkeletonCircle className="h-16 w-16" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-5 w-36" />
+                                        <Skeleton className="h-4 w-24" />
+                                    </div>
+                                    <Skeleton
+                                        rounded="rounded-lg"
+                                        className="ml-auto h-9 w-28"
+                                    />
+                                </div>
+                            ) : (
                             <div className="mt-6 flex items-center gap-4">
                                 {photoDraft ? (
                                     <img
@@ -308,7 +323,11 @@ const SettingsPage: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+                            )}
 
+                            {isWaProfileLoading ? (
+                                <WhatsappProfileFieldsSkeleton />
+                            ) : (
                             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                 <div>
                                     <label className="mb-1.5 block text-xs font-medium text-gray-600">
@@ -343,6 +362,7 @@ const SettingsPage: React.FC = () => {
                                     />
                                 </div>
                             </div>
+                            )}
 
                             <div className="mt-6 flex items-center gap-3">
                                 <button
@@ -352,12 +372,6 @@ const SettingsPage: React.FC = () => {
                                 >
                                     {isSaving ? "Saving..." : "Save Profile"}
                                 </button>
-
-                                {isWaProfileLoading && (
-                                    <p className="text-xs text-gray-400">
-                                        Loading profile...
-                                    </p>
-                                )}
                             </div>
                         </div>
 

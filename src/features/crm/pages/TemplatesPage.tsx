@@ -32,7 +32,6 @@ import {
 import {
     AmberBadge,
     BlueBadge,
-    CenteredSpinner,
     DangerButton,
     EmptyState,
     Field,
@@ -46,6 +45,7 @@ import {
     fmtDateTime,
     inputCls,
 } from "../components/CrmUi";
+import { CardGridSkeleton } from "@/components/ui/skeleton/PageSkeletons";
 import type {
     Template,
     TemplateCategory,
@@ -294,6 +294,69 @@ const categoryBadge = (c: TemplateCategory) => {
     );
 };
 
+/** Colour accent strip for a template card, keyed by media type. */
+const mediaAccent = (type: TemplateType) => {
+    switch (type) {
+        case "image":
+            return "bg-blue-500";
+        case "video":
+            return "bg-violet-500";
+        case "audio":
+            return "bg-amber-500";
+        case "document":
+            return "bg-gray-400";
+        default:
+            return "bg-emerald-500";
+    }
+};
+
+/** Soft hover glow colour for a template card, keyed by media type. */
+const mediaGlow = (type: TemplateType) => {
+    switch (type) {
+        case "image":
+            return "bg-blue-500/25";
+        case "video":
+            return "bg-violet-500/25";
+        case "audio":
+            return "bg-amber-500/25";
+        case "document":
+            return "bg-gray-400/25";
+        default:
+            return "bg-emerald-500/25";
+    }
+};
+
+/** Icon tile colours for a template card, keyed by media type. */
+const mediaTile = (type: TemplateType) => {
+    switch (type) {
+        case "image":
+            return "bg-blue-50 text-blue-600";
+        case "video":
+            return "bg-violet-50 text-violet-600";
+        case "audio":
+            return "bg-amber-50 text-amber-600";
+        case "document":
+            return "bg-gray-100 text-gray-600";
+        default:
+            return "bg-emerald-50 text-emerald-600";
+    }
+};
+
+const mediaTypeIcon = (type: TemplateType) => {
+    switch (type) {
+        case "image":
+            return <PictureOutlined />;
+        case "video":
+            return <VideoCameraOutlined />;
+        case "audio":
+            return <AudioOutlined />;
+        case "document":
+            return <FileOutlined />;
+        default:
+            return <FileTextOutlined />;
+    }
+};
+
 /**
  * Does `word` appear in `content` — as a {{word}} token OR as a bare word
  * (word-boundary)? Used to validate that a variable actually exists in the
@@ -393,18 +456,21 @@ const HighlightedContent: React.FC<{
         );
     }
 
+    // On the emerald preview bubble a pale blue link and an amber-on-green
+    // highlight both lose contrast, so use white for links and a solid amber
+    // pill (dark text on amber) for variables there.
     const linkCls = onDark
-        ? "font-medium text-sky-300 underline underline-offset-2"
+        ? "font-medium text-white underline underline-offset-2"
         : "font-medium text-blue-600 underline underline-offset-2";
+    const markCls = onDark
+        ? "rounded bg-amber-300 px-1 py-px font-semibold text-amber-950"
+        : "rounded bg-amber-100 px-0.5 py-px font-medium text-amber-800";
 
     return (
         <p className={`whitespace-pre-wrap text-sm ${onDark ? "text-white" : "text-gray-700"}`}>
             {parts.map((part, i) =>
                 part.kind === "var" ? (
-                    <mark
-                        key={i}
-                        className="rounded bg-amber-100 px-0.5 py-px font-medium text-amber-800"
-                    >
+                    <mark key={i} className={markCls}>
                         {part.text}
                     </mark>
                 ) : part.kind === "link" ? (
@@ -476,7 +542,7 @@ One message, endless reach — reusable WhatsApp templates with dynamic variable
             </div>
 
             {isLoading ? (
-                <CenteredSpinner label="Loading templates…" />
+                <CardGridSkeleton />
             ) : !templates?.length ? (
                 <EmptyState
                     icon={<FileTextOutlined />}
@@ -498,13 +564,27 @@ One message, endless reach — reusable WhatsApp templates with dynamic variable
                     {templates.map((t) => (
                         <div
                             key={t._id}
-                            className="flex flex-col rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:shadow-md"
+                            className="group relative flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl"
                         >
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-lg text-emerald-600">
-                                    <FileTextOutlined />
+                            {/* media-type accent strip */}
+                            <span
+                                aria-hidden="true"
+                                className={`absolute inset-x-0 top-0 h-1 ${mediaAccent(t.type)}`}
+                            />
+
+                            {/* soft coloured glow — fades in on hover */}
+                            <span
+                                aria-hidden="true"
+                                className={`pointer-events-none absolute -right-14 -top-14 h-32 w-32 rounded-full opacity-0 blur-2xl transition duration-500 group-hover:opacity-100 ${mediaGlow(t.type)}`}
+                            />
+
+                            <div className="relative flex items-start justify-between gap-3">
+                                <div
+                                    className={`flex h-11 w-11 items-center justify-center rounded-xl text-lg shadow-sm ${mediaTile(t.type)}`}
+                                >
+                                    {mediaTypeIcon(t.type)}
                                 </div>
-                                <div className="flex gap-1">
+                                <div className="flex gap-1 transition duration-200 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                                     <button
                                         onClick={() => setPreviewTarget(t)}
                                         title="Preview"
@@ -532,8 +612,13 @@ One message, endless reach — reusable WhatsApp templates with dynamic variable
                                 </div>
                             </div>
 
-                            <div className="mt-4 flex items-center gap-2">
-                                <h3 className="text-base font-semibold text-gray-900">{t.name}</h3>
+                            <div className="relative mt-3.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                                <h3
+                                    className="w-full min-w-0 text-[15px] font-semibold leading-snug text-gray-900 line-clamp-2"
+                                    title={t.name}
+                                >
+                                    {t.name}
+                                </h3>
                                 {t.devMode && (
                                     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
                                         <SettingOutlined /> Dev Mode
@@ -595,33 +680,43 @@ One message, endless reach — reusable WhatsApp templates with dynamic variable
                                 )}
                             </div>
 
-                            <div className="mt-3 flex-1 rounded-xl bg-gray-50 p-3 text-xs text-gray-600">
-                                <HighlightedContent
-                                    content={t.content}
-                                    variables={t.variables || []}
+                            <div className="relative mt-3 flex-1 overflow-hidden rounded-xl border border-gray-100 bg-gray-50/60 py-3 pl-3.5 pr-3 text-xs leading-relaxed text-gray-600">
+                                <span
+                                    aria-hidden="true"
+                                    className={`absolute inset-y-0 left-0 w-1 ${mediaAccent(t.type)}`}
                                 />
+                                <div className="line-clamp-4">
+                                    <HighlightedContent
+                                        content={t.content}
+                                        variables={t.variables || []}
+                                    />
+                                </div>
                             </div>
 
-                            <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
-                                <span className="text-[11px] text-gray-400">
-                                    Updated {fmtDateTime(t.updatedAt)}
-                                </span>
+                            <div className="relative mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-3.5">
+                                <div className="min-w-0">
+                                    <p className="truncate text-[11px] text-gray-400">
+                                        Updated {fmtDateTime(t.updatedAt)}
+                                    </p>
+                                    <div className="mt-1 flex items-center gap-1">
+                                        <span className="max-w-[9rem] truncate rounded-md bg-gray-100 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+                                            {t._id}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => copyId(t._id)}
+                                            title="Copy template ID"
+                                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-gray-400 transition hover:bg-gray-100 hover:text-emerald-600"
+                                        >
+                                            <CopyOutlined />
+                                        </button>
+                                    </div>
+                                </div>
                                 <button
                                     onClick={() => setPreviewTarget(t)}
-                                    className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 transition hover:text-emerald-700"
+                                    className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-600 shadow-sm transition hover:bg-emerald-100"
                                 >
                                     <EyeOutlined /> Preview
-                                </button>
-                            </div>
-                            <div className="mt-1.5 flex items-center justify-between gap-2 font-mono text-[10px] text-gray-400">
-                                <span className="truncate">ID: {t._id}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => copyId(t._id)}
-                                    title="Copy template ID"
-                                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-gray-400 transition hover:bg-gray-100 hover:text-emerald-600"
-                                >
-                                    <CopyOutlined />
                                 </button>
                             </div>
                         </div>
@@ -920,7 +1015,7 @@ const TemplateFormModal: React.FC<{
                         <p className="text-xs font-semibold text-gray-800">
                             Dev Mode
                         </p>
-                        <p className="mt-0.5 text-[11px] leading-tight text-gray-400">
+                        <p className="mt-0.5 text-[11px] leading-tight text-gray-500">
                             {form.devMode
                                 ? "ON — text in Content, pick the media type — the media URL goes in the API call"
                                 : "OFF — simple text/link template only"}
@@ -937,6 +1032,7 @@ const TemplateFormModal: React.FC<{
                         }`}
                     >
                         <span
+                            style={{ backgroundColor: "#ffffff" }}
                             className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
                                 form.devMode ? "translate-x-4" : "translate-x-0"
                             }`}
@@ -1026,7 +1122,7 @@ const TemplateFormModal: React.FC<{
                                         }
                                         className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition ${
                                             form.mediaType === val
-                                                ? "bg-emerald-600 text-white shadow-sm"
+                                                ? "bg-emerald-700 text-white shadow-sm"
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
                                     >
@@ -1108,22 +1204,22 @@ const TemplateFormModal: React.FC<{
                     </div>
                     <div className="rounded-2xl bg-gray-50/60 p-4">
                         {/* WhatsApp-style bubble */}
-                        <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-500 px-4 py-3 text-sm text-white shadow-sm">                            {form.mediaType !== "text" &&
+                        <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-800 px-4 py-3 text-sm text-white shadow-sm">                            {form.mediaType !== "text" &&
                             previewMediaUrl &&
                             previewMediaUrl.includes("{{") ? (
-                                <div className="mb-2 rounded-xl bg-emerald-600/70 px-3 py-3">
+                                <div className="mb-2 rounded-xl bg-emerald-900/60 px-3 py-3">
                                     <p className="flex items-center gap-2 text-xs font-medium">
                                         <LinkOutlined /> Dynamic media link
                                     </p>
-                                    <p className="mt-1 truncate text-[11px] text-emerald-100">
+                                    <p className="mt-1 truncate text-[11px] text-white/90">
                                         {previewMediaUrl}
                                     </p>
-                                    <p className="mt-1 text-[10px] text-emerald-200">
-A different URL is sent for each contact
+                                    <p className="mt-1 text-[10px] text-white/80">
+                                        A different URL is sent for each contact
                                     </p>
                                 </div>
                             ) : form.mediaType !== "text" && previewMediaUrl ? (
-                                <div className="mb-2 overflow-hidden rounded-xl bg-emerald-600/70">
+                                <div className="mb-2 overflow-hidden rounded-xl bg-emerald-900/60">
                                     {form.mediaType === "image" ? (
                                         <img
                                             src={previewMediaUrl}
@@ -1159,7 +1255,7 @@ A different URL is sent for each contact
                                     onDark
                                 />
                             </div>
-                            <p className="mt-2 text-right text-[10px] text-emerald-100">
+                            <p className="mt-2 text-right text-[10px] font-medium text-white/90">
                                 {new Date().toLocaleTimeString([], {
                                     hour: "2-digit",
                                     minute: "2-digit",
@@ -1235,7 +1331,7 @@ A different URL is sent for each contact
                                         }
                                         className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition ${
                                             form.mediaType === val
-                                                ? "bg-emerald-600 text-white shadow-sm"
+                                                ? "bg-emerald-700 text-white shadow-sm"
                                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
                                     >
@@ -1250,27 +1346,27 @@ A different URL is sent for each contact
 
                 {/* Dev mode — how to call via API */}
                 {form.devMode && (
-                    <div className="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+                    <div className="rounded-2xl border border-slate-700/60 bg-slate-900/80 p-4">
                         <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-400">
+                            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-100">
                                 <ApiOutlined /> How to call via API
                             </p>
                             <button
                                 type="button"
                                 onClick={copyApiExample}
-                                className="flex items-center gap-1 rounded-lg bg-gray-700 px-2.5 py-1 text-[11px] font-semibold text-gray-200 transition hover:bg-gray-600"
+                                className="flex items-center gap-1 rounded-lg bg-slate-700/80 px-2.5 py-1 text-[11px] font-semibold text-slate-100 transition hover:bg-slate-600"
                             >
                                 <CopyOutlined /> Copy body
                             </button>
                         </div>
 
                         {/* Recipient + schedule options */}
-                        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl bg-gray-800/60 p-3">
+                        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl bg-slate-800/50 p-3">
                             <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-semibold text-gray-400">
-Send to:
+                                <span className="text-[11px] font-semibold text-slate-200">
+                                    Send to:
                                 </span>
-                                <div className="flex overflow-hidden rounded-lg border border-gray-600">
+                                <div className="flex overflow-hidden rounded-lg border border-slate-600">
                                     {(["single", "multiple"] as const).map((m) => (
                                         <button
                                             key={m}
@@ -1281,7 +1377,7 @@ Send to:
                                             className={`px-3 py-1.5 text-[11px] font-semibold transition ${
                                                 form.toMode === m
                                                     ? "bg-emerald-600 text-white"
-                                                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                                    : "bg-slate-700/70 text-slate-200 hover:bg-slate-600"
                                             }`}
                                         >
                                             {m === "single" ? "Single" : "Multiple"}
@@ -1290,7 +1386,7 @@ Send to:
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-semibold text-gray-400">
+                                <span className="text-[11px] font-semibold text-slate-200">
                                     Schedule:
                                 </span>
                                 <button
@@ -1305,6 +1401,7 @@ Send to:
                                     }`}
                                 >
                                     <span
+                                        style={{ backgroundColor: "#ffffff" }}
                                         className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${
                                             form.scheduleOn ? "translate-x-4" : "translate-x-0"
                                         }`}
@@ -1312,11 +1409,11 @@ Send to:
                                 </button>
                             </div>
                         </div>
-                        <div className="mb-2 space-y-1 text-[10px] leading-relaxed text-gray-500">
+                        <div className="mb-2.5 space-y-1.5 text-[11px] leading-relaxed text-slate-300">
                             <p>
                                 {"Variables — plain words written in Content (no {{}} needed). Every variable needs a value in the body (name → value). Anything else is ignored:"}
                             </p>
-                            <p className="font-mono text-gray-400">
+                            <p className="font-mono text-emerald-200">
                                 {Object.keys(apiVariables).length > 0
                                     ? Object.entries(apiVariables)
                                           .map(([k]) => `"${k}": "sample_${k}"`)
@@ -1329,7 +1426,7 @@ Send to:
                                 </p>
                             )}
                         </div>
-                        <pre className="overflow-x-auto font-mono text-[11px] leading-relaxed text-emerald-300">
+                        <pre className="overflow-x-auto rounded-xl border border-slate-700/60 bg-black/45 p-3 font-mono text-[11px] leading-relaxed text-emerald-200">
 {`POST https://numerate-resisting-squeamish.ngrok-free.dev/api/messaging/messages/send
 
 Headers:
@@ -1339,7 +1436,7 @@ Body:
 ${apiExample}`}
                         </pre>
                         {form.mediaType !== "text" && (
-                            <p className="mt-2 border-t border-gray-700 pt-2 text-[10px] leading-relaxed text-gray-500">
+                            <p className="mt-3 border-t border-slate-700/60 pt-2.5 text-[11px] leading-relaxed text-slate-300">
                                 {"Note: dev mode doesn't save media on the template — send your full URL in media.url ({{variable}} allowed, replaced per send)."}
                             </p>
                         )}
@@ -1418,7 +1515,7 @@ const TemplatePreviewModal: React.FC<{
                     <button
                         type="button"
                         onClick={() => copyText(template._id, "Template ID copied")}
-                        className="flex shrink-0 items-center gap-1 rounded-lg bg-gray-700 px-2.5 py-1.5 text-[11px] font-semibold text-gray-200 transition hover:bg-gray-600"
+                        className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-700/80 px-2.5 py-1.5 text-[11px] font-semibold text-slate-100 transition hover:bg-slate-600"
                     >
                         <CopyOutlined /> Copy ID
                     </button>
@@ -1442,9 +1539,9 @@ const TemplatePreviewModal: React.FC<{
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                         Rendered message
                     </p>
-                    <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-500 px-4 py-3 text-sm text-white shadow-sm">
+                    <div className="max-w-sm rounded-2xl rounded-tl-sm bg-emerald-800 px-4 py-3 text-sm text-white shadow-sm">
                         {template.type !== "text" && template.media?.url && (
-                            <div className="mb-2 overflow-hidden rounded-xl bg-emerald-600/70">
+                            <div className="mb-2 overflow-hidden rounded-xl bg-emerald-900/60">
                                 {template.type === "image" ? (
                                     <img
                                         src={template.media.url}
@@ -1484,7 +1581,7 @@ const TemplatePreviewModal: React.FC<{
                                 onDark
                             />
                         </p>
-                        <p className="mt-2 text-right text-[10px] text-emerald-100">
+                        <p className="mt-2 text-right text-[10px] font-medium text-emerald-50">
                             {new Date().toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -1504,9 +1601,9 @@ const TemplatePreviewModal: React.FC<{
 
                 {/* Dev mode — full API call details (same as the create modal) */}
                 {template.devMode && (
-                    <div className="rounded-2xl border border-gray-800 bg-gray-900 p-4">
+                    <div className="rounded-2xl border border-slate-700/60 bg-slate-900/80 p-4">
                         <div className="mb-2 flex items-center justify-between gap-2">
-                            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-400">
+                            <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-100">
                                 <ApiOutlined /> How to call via API
                             </p>
                             <button
@@ -1517,12 +1614,12 @@ const TemplatePreviewModal: React.FC<{
                                         "API body copied",
                                     )
                                 }
-                                className="flex items-center gap-1 rounded-lg bg-gray-700 px-2.5 py-1 text-[11px] font-semibold text-gray-200 transition hover:bg-gray-600"
+                                className="flex items-center gap-1 rounded-lg bg-slate-700/80 px-2.5 py-1 text-[11px] font-semibold text-slate-100 transition hover:bg-slate-600"
                             >
                                 <CopyOutlined /> Copy body
                             </button>
                         </div>
-                        <pre className="overflow-x-auto font-mono text-[11px] leading-relaxed text-emerald-300">
+                        <pre className="overflow-x-auto rounded-xl border border-slate-700/60 bg-black/45 p-3 font-mono text-[11px] leading-relaxed text-emerald-200">
 {`POST https://numerate-resisting-squeamish.ngrok-free.dev/api/messaging/messages/send
 
 Headers:
@@ -1531,9 +1628,9 @@ Headers:
 Body:
 ${apiBody}`}
                         </pre>
-                        <p className="mt-2 border-t border-gray-700 pt-2 text-[10px] leading-relaxed text-gray-500">
+                        <p className="mt-3 border-t border-slate-700/60 pt-2.5 text-[11px] leading-relaxed text-slate-300">
                             {"Template ID: "}
-                            <span className="font-mono text-gray-300">{template._id}</span>
+                            <span className="font-mono text-slate-100">{template._id}</span>
                             {" — dev mode templates don't save media; send your full URL in media.url ({{variable}} allowed, replaced per send)."}
                         </p>
                     </div>
