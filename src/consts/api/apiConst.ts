@@ -1,9 +1,9 @@
 const apiConst = {
-  // Default: Render-deployed live backend.
+  // Default: live backend (whatsapp-services.iggmc.in).
   // Override karna ho (e.g. ngrok/local) to VITE_API_BASE_URL env var set karo:
   //   VITE_API_BASE_URL=https://numerate-resisting-squeamish.ngrok-free.dev/api
   BASE_URL:
-    import.meta.env.VITE_API_BASE_URL || "https://whatsapp-services-8t87.onrender.com/api",
+    import.meta.env.VITE_API_BASE_URL || "https://whatsapp-services.iggmc.in/api",
   AUTH: {
     callAuthOtp: "/generate-otp",
     verify_otp: "/verify-otp",

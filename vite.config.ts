@@ -13,7 +13,6 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        // target: "https://whatsapp-services-8t87.onrender.com",
         target: "https://whatsapp-services.iggmc.in",
         changeOrigin: true,
         secure: false,
