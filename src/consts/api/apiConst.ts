@@ -3,7 +3,8 @@ const apiConst = {
   // Override karna ho (e.g. ngrok/local) to VITE_API_BASE_URL env var set karo:
   //   VITE_API_BASE_URL=https://numerate-resisting-squeamish.ngrok-free.dev/api
   BASE_URL:
-    import.meta.env.VITE_API_BASE_URL || "https://whatsapp-services.iggmc.in/api",
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://whatsapp-services.iggmc.in/api",
   AUTH: {
     callAuthOtp: "/generate-otp",
     verify_otp: "/verify-otp",
