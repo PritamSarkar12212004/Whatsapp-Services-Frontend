@@ -11,6 +11,7 @@ export default defineConfig({
     },
   },
   server: {
+    port: 3087,
     proxy: {
       "/api": {
         target: "https://whatsapp-services.iggmc.in",
